@@ -19,7 +19,6 @@ def pick_hackerrank_problem(bot, topics, tries=0):
         topics = [ "algorithms" ]
     for c in read["model"]["categories"]:
         for t in topics:
-            print c["slug"], c["name"]
             if c["slug"].find(t) != -1 or c["name"].lower().find(t) != -1:
                 cats.append(c)
 

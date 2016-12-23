@@ -1,8 +1,9 @@
 import object_picker, listen_to
 
 import reload_cmd
+import channel
 
-modules = [ object_picker, listen_to, reload_cmd, algos ]
+modules = [ object_picker, listen_to, reload_cmd, algos, channel ]
 
 COMMANDS = {}
 def _reload():

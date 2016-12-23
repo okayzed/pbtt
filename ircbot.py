@@ -22,8 +22,9 @@ import mannerisms
 import helpers
 import auth
 import interactions as intrs
+import response
 
-reloadables = [mannerisms, helpers, auth, intrs, commands]
+reloadables = [mannerisms, helpers, auth, intrs, commands, response]
 
 CHANNEL_CMDS = {"JOIN": 1, "PART": 1, "PRIVMSG": 1}
 PRINT_LINES = True
@@ -36,22 +37,13 @@ def load():
         reload(r)
         if hasattr(r, '_reload'):
             r._reload()
-
-
 load()
 
-local = None
+# load local settings
 try:
-    import local
+    from local import *
 except:
     pass
-
-if local:
-    if hasattr(local, 'botnick'):
-        botnick = local.botnick
-
-    if hasattr(local, 'channel'):
-        channel = local.channel
 
 SSLError = ssl.SSLError
 try:
@@ -177,6 +169,18 @@ class IRC_Bot():
                     continue
                 print e
 
+    def make_response(self, cmd_data):
+        bot = response.Response()
+        bot.bot = self
+        bot.channel = cmd_data["channel"]
+        bot.from_nick = cmd_data["nick"]
+        if bot.channel == self.botnick:
+            bot.channel = bot.from_nick
+
+        print "MAKING RESPONSE FOR", cmd_data
+
+        return bot
+
     def handle_numeric_reply(self, sendername, intcommand, tokens):
         if intcommand == 433: # nick in USE?!
             self.botnick = self.botnick + "_"
@@ -251,9 +255,9 @@ class IRC_Bot():
             print "CMD", cmd
 
             if cmd in commands.COMMANDS:
-                self.do_command(sendername, cmd, tokens)
+                self.do_command(sendername, channel, cmd, tokens)
             else:
-                self.do_interact(sendername, all_tokens)
+                self.do_interact(sendername, channel, all_tokens)
 
     def handle_join(self, sendername, channel):
         exclamationIndex = sendername.find("!")
@@ -262,20 +266,22 @@ class IRC_Bot():
     def handle_part(self, sendername, channel):
         pass
 
-    def do_command(self, sendername, cmd, tokens):
+    def do_command(self, sendername, channel, cmd, tokens):
         if cmd in commands.COMMANDS:
             cmd_data = {
                 "cmd" : cmd,
                 "sender" : sendername,
+                "channel" : channel,
                 "nick" : helpers.nick_for(sendername)
             }
 
-            commands.COMMANDS[cmd](self, cmd_data, *tokens)
+            bot_response = self.make_response(cmd_data)
+            commands.COMMANDS[cmd](bot_response, cmd_data, *tokens)
 
     # we need to create a cooldown period for
     # anyone not in our list of authorized users
     # this way we can prevent them from noticing our bottiness
-    def do_interact(self, sendername, tokens):
+    def do_interact(self, sendername, channel, tokens):
         nick = helpers.nick_for(sendername)
         interactions = []
             
@@ -285,8 +291,11 @@ class IRC_Bot():
 
         cmd_data = {
             "sender" : sendername,
-            "nick" : helpers.nick_for(sendername)
+            "nick" : helpers.nick_for(sendername),
+            "channel" : channel
         }
+
+        bot_response = self.make_response(cmd_data)
 
         if nick not in auth.ALLOWED and "*" not in auth.ALLOWED:
             if random.random() > 0.9:
@@ -303,7 +312,7 @@ class IRC_Bot():
         if interactions:
             interactions.sort()
             print "LIKELY INTERACTIONS", interactions
-            mannerisms.wait_small(lambda: interactions[-1][1].do(self, cmd_data, tokens))
+            mannerisms.wait_small(lambda: interactions[-1][1].do(bot_response, cmd_data, tokens))
             
 
     def run_forever(self):
