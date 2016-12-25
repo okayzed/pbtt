@@ -48,7 +48,7 @@ def find_all_topics(tokens):
     possibles = []
     load_data()
     for q in FACTS:
-        overlap = topics.intersection(q.topic)
+        overlap = topics.difference(FILLWORDS).intersection(q.topic)
         if overlap:
             possibles.append((q, overlap))
 
@@ -108,10 +108,11 @@ def forget_fact(bot, data, *args):
 
         save_data()
 
+import string
 def recall_fact(bot, data, *args):
     full_args = " ".join(args)
     match = re.search("\[(\d+)\]", full_args)
-    full_args = re.sub("\[(\d+)\]", "", full_args)
+    full_args = re.sub("\[(\d+)\]", "", full_args).translate(None, string.punctuation)
 
     tokens = shlex.split(full_args)
     cands = find_all_topics(tokens)
@@ -181,7 +182,11 @@ def recall_fact(bot, data, *args):
 def merge_fact(bot, data, *args):
     full_args = " ".join(args)
     tokens = shlex.split(full_args)
-    tokens.remove("into")
+
+    for x in [ "to", "into" ]:
+        if x in tokens:
+            tokens.remove(x)
+
     load_data()
 
     print "FULL ARGS", full_args
@@ -193,14 +198,17 @@ def merge_fact(bot, data, *args):
         src = find_exact_topic(tokens[0])
         dst = find_exact_topic(tokens[1])
 
-        bot.say(data["nick"]+":", "Merging %s into %s" % (src.name, dst.name))
+        if not dst:
+            dst = Topic(tokens[1])
+            FACTS.append(dst)
+
+        bot.say(data["nick"]+":", "Merging '%s' into '%s'" % (src.name, dst.name))
         print "MERGING", src, "INTO", dst
         for ans in src.answers:
             dst.answers.append(ans)
 
         print "REMOVING FACT", src.name
         FACTS.remove(src)
-        bot.say(data["nick"]+":", affirmative())
 
         save_data()
 
