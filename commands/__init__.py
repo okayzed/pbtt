@@ -2,8 +2,10 @@ import object_picker, listen_to
 
 import reload_cmd
 import channel
+import facts
 
-modules = [ object_picker, listen_to, reload_cmd, algos, channel ]
+# algos needs to come before object picker, apparently
+modules = [ algos, object_picker, listen_to, reload_cmd, channel, facts ]
 
 COMMANDS = {}
 def _reload():

@@ -18,6 +18,17 @@ OBJECTS = {
     "algorithm" : algos.ALGO_SITES
 }
 
+
+# OBJECT PICKER SYNTAX IS:
+# [pick|find|suggest] a <object>
+# ABOUT topic words
+# FROM site
+
+# examples:
+# pick a problem about easy #dynamic algorithms from hackerrank
+# pick a problem from hackerrank about algorithms #dynamic (easy or medium, please)
+# can you suggest a problem about math and #combinatorics (easy only) from hackerrank?
+
 def pick_random_object(bot, cmd, *args):
     print "PICKING RANDOM ALGO"
 
@@ -39,12 +50,12 @@ def pick_random_object(bot, cmd, *args):
             if obj:
                 continue
 
-  
+
     if not obj in OBJECTS:
         self.say("What?")
         return
 
-   
+
     sites = OBJECTS[obj]
     topics = []
     from_ = True
@@ -57,7 +68,7 @@ def pick_random_object(bot, cmd, *args):
             nono = True
             continue
 
-        if arg == "about":
+        if arg == "about" or arg == "that" or arg == "thats" or arg == "make":
             topic = True
             from_ = False
             continue
@@ -68,7 +79,7 @@ def pick_random_object(bot, cmd, *args):
             continue
 
 
-       
+
         if len(arg) < 3:
             continue
 
@@ -110,8 +121,9 @@ def pick_random_object(bot, cmd, *args):
         wait_large(pick_obj)
 
     wait_small(next_step)
-    
+
 COMMANDS = {}
 COMMANDS["pick"] = pick_random_object
 COMMANDS["give"] = pick_random_object
 COMMANDS["find"] = pick_random_object
+COMMANDS["suggest"] = pick_random_object

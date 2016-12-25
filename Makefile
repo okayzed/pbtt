@@ -4,4 +4,4 @@ dummybot:
 	rlwrap python dummybot.py
 
 realbot:
-	rlwrap python algobot.py
+	rlwrap python main.py

@@ -12,8 +12,8 @@ import string
 def add_import_paths():
     import os,sys,inspect
     currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-    sys.path.insert(0,currentdir) 
-    sys.path.insert(0,os.path.join(currentdir, "lib")) 
+    sys.path.insert(0,currentdir)
+    sys.path.insert(0,os.path.join(currentdir, "lib"))
 
 add_import_paths()
 
@@ -50,7 +50,11 @@ try:
     SSLError = ssl.SSLWantReadError
 except:
     pass
-    
+
+
+class BotTransferException(Exception):
+    pass
+
 class IRC_Bot():
     def __init__(self,
                  server="chat.freenode.net",
@@ -100,13 +104,16 @@ class IRC_Bot():
     # kwargs = { d: 'f', e: 'g' }
     def send(self, *args, **kwargs):
         msg_str = " ".join(args)
-        print "SENDING", msg_str.strip()
+        self.debug("SENDING", msg_str.strip())
         self.s_mutex.acquire()
         self.irc.send(msg_str + "\r\n")
         self.s_mutex.release()
 
     def say(self, *args):
         self.send("PRIVMSG", self.channel, ":" + " ".join(args))
+
+    def debug(self, *args):
+        print " ".join(map(str, args))
 
     # this is a generator function that uses our irc socket connection to read
     # and stitch together lines from the network
@@ -138,7 +145,7 @@ class IRC_Bot():
                     waiting_input = []
                     self.say(flush)
                 else:
-                    waiting_input.append(q)	
+                    waiting_input.append(q)
 
             try:
                 # if the last character is not a newline, we hold onto the
@@ -177,19 +184,17 @@ class IRC_Bot():
         if bot.channel == self.botnick:
             bot.channel = bot.from_nick
 
-        print "MAKING RESPONSE FOR", cmd_data
+        self.debug("MAKING RESPONSE FOR", cmd_data)
 
         return bot
 
     def handle_numeric_reply(self, sendername, intcommand, tokens):
         if intcommand == 433: # nick in USE?!
             self.botnick = self.botnick + "_"
-            print "NICK ALREADY IN USE, SWITCHING TO %s" % self.botnick
+            self.debug("NICK ALREADY IN USE, SWITCHING TO %s" % self.botnick)
             self.send("NICK", self.botnick)
             self.send("JOIN", self.channel)
 
-
-            
 
     def handle_opcode_reply(self, sendername, command, tokens):
         channel = None
@@ -204,19 +209,23 @@ class IRC_Bot():
             self.handle_part(sendername, channel)
 
     def handle_privmsg_with_cooldown(self, sendername, channel, tokens):
-        print "HANDLING PRIVMSG", sendername, channel, tokens
+        self.debug("HANDLING PRIVMSG", sendername, channel, tokens)
         to = tokens[0]
+
         if to.find(self.botnick) != 1:
-            return
+            if channel == self.botnick:
+                tokens.insert(0, ":"+self.botnick)
+            else:
+                return
+
 
         if not sendername in self.cooldown:
             self.cooldown[sendername] = [(sendername, channel, tokens)]
-            
 
             def cb():
                 if sendername in self.cooldown:
                     if not self.cooldown[sendername]:
-                        print "REMOVING %s FROM COOLDOWN" % sendername
+                        self.debug("REMOVING %s FROM COOLDOWN" % sendername)
                         del self.cooldown[sendername]
                     else:
                         try:
@@ -231,28 +240,30 @@ class IRC_Bot():
             self.cooldown[sendername].append((sendername, channel, tokens))
             self.cooldown[sendername] = self.cooldown[sendername][-3:]
 
-        print "COOLDOWN", self.cooldown
-            
+        self.debug("COOLDOWN", self.cooldown)
 
-        
+
+
     def handle_privmsg(self, sendername, channel, tokens):
         to = tokens.pop(0)
         exclamationIndex = sendername.find("!")
         nick = sendername[1:exclamationIndex]
 
-        print "HANDLING PRIVMSG", sendername, channel, tokens
+        self.debug("HANDLING PRIVMSG", sendername, channel, tokens)
         all_tokens = [t for t in tokens]
-        if to.find(self.botnick) == 1 and nick in auth.ALLOWED:
+        addressed_to_bot = False
+        if to.find(self.botnick) == 1:
+            addressed_to_bot = True
+
+        if addressed_to_bot and nick in auth.ALLOWED:
             cmd = tokens.pop(0)
             cmd = cmd.translate(None, string.punctuation)
             while cmd in mannerisms.FILLWORDS and tokens:
-                cmd = tokens.pop(0)
+                cmd = tokens.pop(0).lower()
                 cmd = cmd.translate(None, string.punctuation)
 
                 if cmd == "":
                     cmd = "hey"
-
-            print "CMD", cmd
 
             if cmd in commands.COMMANDS:
                 self.do_command(sendername, channel, cmd, tokens)
@@ -268,6 +279,8 @@ class IRC_Bot():
 
     def do_command(self, sendername, channel, cmd, tokens):
         if cmd in commands.COMMANDS:
+            self.debug("RECEIVED COMMAND", cmd)
+
             cmd_data = {
                 "cmd" : cmd,
                 "sender" : sendername,
@@ -284,10 +297,10 @@ class IRC_Bot():
     def do_interact(self, sendername, channel, tokens):
         nick = helpers.nick_for(sendername)
         interactions = []
-            
+
         import string
-        tokens = [ t.translate(None, string.punctuation) for t in tokens ]
-        print "INTERACTIONS", tokens
+        tokens = [ t.translate(None, string.punctuation).lower() for t in tokens ]
+        self.debug("INTERACTIONS", tokens)
 
         cmd_data = {
             "sender" : sendername,
@@ -311,17 +324,18 @@ class IRC_Bot():
 
         if interactions:
             interactions.sort()
-            print "LIKELY INTERACTIONS", interactions
+            self.debug("LIKELY INTERACTIONS", interactions)
             mannerisms.wait_small(lambda: interactions[-1][1].do(bot_response, cmd_data, tokens))
-            
+
 
     def run_forever(self):
+        self.debug("RUNNING FOREVER")
         for line in self.readlines():
             # Prevent Timeout
             if PRINT_LINES:
-                print line.strip("\r\n ")
+                self.debug(line.strip("\r\n "))
             if line.find('PING') != -1:
-                print "PONGING..."
+                self.debug("PONGING...")
                 self.irc.send('PONG ' + line.split()[1] + '\r\n')
                 continue
 
@@ -342,6 +356,10 @@ class IRC_Bot():
                                                   tokens)
                     else:
                         self.handle_opcode_reply(sendername, command, tokens)
+                except BotTransferException, e:
+                    break
                 except Exception, e:
                     print e
+                except KeyboardInterrupt, e:
+                    break
 

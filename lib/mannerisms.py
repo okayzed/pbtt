@@ -25,9 +25,9 @@ def random_cycles(msgs):
 
 AFFIRM = random_cycles([
     "alright - ",
-    "can do", 
-    "will do!", 
-    "got it", 
+    "can do",
+    "will do!",
+    "got it",
     "fine...",
 ])
 
@@ -65,6 +65,8 @@ FILLWORDS = [
     "alright",
     "good",
     "haha",
+    "anyways",
+    "meh",
     "lol",
     "heh",
     "hey",
@@ -91,7 +93,14 @@ def encouragement():
 def huh():
     return next(HUH)
 
+
+ACTUALLY_WAIT=True
 def wait_small(cb=None):
+    if not ACTUALLY_WAIT:
+        if cb:
+            cb()
+        return
+
     amount = random.random() * 5 + 3
     if cb:
         print "WAITING SMALL"
@@ -103,6 +112,10 @@ def wait_small(cb=None):
         print "DONE SMALL"
 
 def wait_large(cb=None):
+    if not ACTUALLY_WAIT:
+        if cb:
+            cb()
+        return
     amount = random.random() * 5 + 3
     if cb:
         print "WAITING LARGE"
@@ -112,4 +125,4 @@ def wait_large(cb=None):
         print "WAITING LARGE"
         time.sleep(amount)
         print "DONE LARGE"
-    
+
