@@ -12,6 +12,22 @@ import ircbot
 import shlex
 import helpers
 
+
+STEMMER=lambda w: w
+
+try:
+    from stemming import porter2
+    STEMMER=porter2.stem
+except:
+    pass
+
+try:
+    import porter2stemmer
+    STEMMER=porter2stemmer.Porter2Stemmer().stem
+except:
+    pass
+
+
 class Fact(object):
     def __init__(self, *args, **kwargs):
         self.answer = " ".join(args)
@@ -19,10 +35,11 @@ class Fact(object):
 class Topic(object):
     def __init__(self, *args, **kwargs):
         self.name = args[0]
-        self.topic = set(args[0].split(" "))
+        self.topic = set(map(STEMMER, args[0].lower().split(" ")))
         self.answers = []
         if len(args) > 1:
             self.answers = args[1:]
+        print 'LEARNING NEW FACT', self.name, self.topic, self.answers
 
 FACTS=None
 def load_data():
@@ -33,16 +50,15 @@ def load_data():
 
 def save_data():
     helpers.save_data_for_module("facts", "db", FACTS)
-    pass
 
 def find_exact_topic(topic):
     for q in FACTS:
         if q.name == topic:
             return q
 
-# print a lit of facts and topics they fall under
+# find a list of facts and topics they fall under
 def find_all_topics(tokens):
-    topics = set(tokens)
+    topics = set(map(STEMMER, tokens))
     # remove fill words from the tokens, probably
 
     possibles = []
@@ -75,6 +91,7 @@ def learn_fact(bot, data, *args):
 
         print "LEARNING", cand.topic, tokens[1:]
         cand.answers.append(fact)
+        bot.say(data["nick"] + ":", affirmative())
         save_data()
 
 def forget_fact(bot, data, *args):
@@ -83,7 +100,7 @@ def forget_fact(bot, data, *args):
 
     full_args = re.sub("\[(\d+)\]", "", full_args)
     tokens = shlex.split(full_args)
-    cand = find_topic(tokens)
+    cand = find_exact_topic(" ".join(tokens))
     print "TOPIC SEARCH", full_args
 
 
@@ -110,7 +127,12 @@ def forget_fact(bot, data, *args):
 
 import string
 def recall_fact(bot, data, *args):
-    full_args = " ".join(args)
+    full_args = " ".join(args).lower()
+    EXPLAIN = False
+    if full_args.find("~explain") >= 0:
+        EXPLAIN = True
+        full_args = full_args.replace("~explain", "").strip()
+
     match = re.search("\[(\d+)\]", full_args)
     full_args = re.sub("\[(\d+)\]", "", full_args).translate(None, string.punctuation)
 
@@ -153,7 +175,7 @@ def recall_fact(bot, data, *args):
 
     all_topics = [c.name for c in cands]
     # if there was more than one topic, we print: "search term", "topic term", search idx, topic idx
-    if len(all_topics) > 1:
+    if EXPLAIN:
         if fact_offset == 0:
             fact_offset = len(fact_topic.answers)
 
@@ -168,11 +190,13 @@ def recall_fact(bot, data, *args):
 
         bot.say("%s. %s" % (sentence_one, sentence_two))
         search_term = full_args
+        answer = fact_topic.answers[fact_offset-1]
+        bot.say(data["nick"] + ":", "'%s' [%s/%s]: %s" % (search_term, index, cur_index, " ".join(answer)))
     else:
         search_term = all_topics[0]
+        answer = fact_topic.answers[fact_offset-1]
+        bot.say(data["nick"] + ":", fact_topic.name, " ".join(answer))
 
-    answer = fact_topic.answers[fact_offset-1]
-    bot.say(data["nick"] + ":", "'%s' [%s/%s]: %s" % (search_term, index, cur_index, " ".join(answer)))
 
 
 
@@ -217,6 +241,7 @@ def merge_fact(bot, data, *args):
 
 COMMANDS = {}
 COMMANDS["learn"] = learn_fact
+COMMANDS["know"] = recall_fact
 COMMANDS["recall"] = recall_fact
 COMMANDS["recommend"] = recall_fact
 COMMANDS["forget"] = forget_fact

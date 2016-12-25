@@ -34,5 +34,3 @@ def _reload():
 
 def save_users():
     helpers.save_data_for_module(__name__, "allowed", ALLOWED)
-
-_reload()
