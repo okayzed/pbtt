@@ -25,7 +25,7 @@ OWNER ONLY
  
 AUTHORIZED ONLY
 
-* facts: learn, recall, merge, forget
+* facts: learn, recall (tell, know), merge, forget
 * pick object: find, pick, suggest. (only supports algo problem for now)
 
 == interactions ==

@@ -120,6 +120,16 @@ def pick_hackerrank_problem(bot, topics, tries=0):
             bot.say("how about %s? it's a %s problem worth %s points" % (problem_slug, difficulty, score))
     wait_large(next_step)
 
+def pick_euler_problem(bot, topics=[]):
+    problem = random.randint(1, 550)
+    url = "https://projecteuler.net/problem=%s" % problem
+    f = urllib2.urlopen(url)
+
+    soup = BeautifulSoup(f, 'html.parser')
+    title = soup.find("div", id="content").find("h2").string
+    if title:
+        bot.say("How about %s? %s - %s " % (title, url, encouragement()))
+
 def pick_uva_problem(bot, topics=[]):
     problem = random.randint(1, 5000)
     url = "https://uva.onlinejudge.org/index.php?option=onlinejudge&page=show_problem&problem=%s" % problem
@@ -143,7 +153,8 @@ ALGO_SITES = {
     "hackerrank": pick_hackerrank_problem,
     "spoj" : pick_spoj_problem,
     "uva" : pick_uva_problem,
-    "leetcode": pick_leetcode_problem
+    "leetcode": pick_leetcode_problem,
+    "euler" : pick_euler_problem
 }
 
 COMMANDS={}

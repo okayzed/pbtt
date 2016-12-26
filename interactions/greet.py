@@ -88,7 +88,7 @@ class Inquire(Interaction):
 class Valediction(Interaction):
     def score(self, data, tokens): 
         all_tok = "".join(tokens)
-        for tok in [ "bye", "seeyou", "cya", "later", "gtg", "gottogo", "seeya", "bbl", "bebacklater" ]:
+        for tok in [ "goodnight", "bye", "seeyou", "cya", "later", "gtg", "gottogo", "seeya", "bbl", "bebacklater","takeiteasy","goodbye" ]:
             if all_tok.find(tok) >= 0:
                 return 1
 
@@ -103,7 +103,7 @@ class Praise(Interaction):
 
     def score(self, data, tokens): 
         all_tok = "".join(tokens)
-        for tok in [ "nicework", "goodjob", "welldone", "goodbot"]:
+        for tok in [ "nicework", "goodjob", "welldone", "goodbot","donewell"]:
             if all_tok.find(tok) >= 0:
                 return 1
 
@@ -113,7 +113,7 @@ class Condemn(Interaction):
         bot.say("%s: %s" % (data["nick"], next(RECEIVE_CONDEMN)))
     def score(self, data, tokens): 
         all_tok = "".join(tokens)
-        for tok in ["fuckoff", "badjob", "hateyou"]:
+        for tok in ["fuckoff", "badjob", "hateyou","bastard"]:
             if all_tok.find(tok) >= 0:
                 return 1
 

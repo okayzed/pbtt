@@ -13,16 +13,48 @@ dobodob: suggest a problem from hackerrank about algorithms #graph (easy or medi
 
 == facts db ==
 
-dobodob: learn "a new topic" the rest of the details
-dobodob: learn "coding sites" the best coding site is codechef
+try to write everything after "learn" as a full sentence. for example:
+
+# is good because the whole statement reads
+# as a full sentence
+learn "dobodob" is really cool
+
+# is bad because dobodob appears twice in a row and
+# the whole statement does not read as a full sentence
+learn "dobodob" dobodob is really cool
+
+# this will cause dobby to say 'a new topic and the rest of the details'
+# when any word from 'a new topic' is queried if its the best match
+dobodob: learn "a new topic" and the rest of the details
+
+# dobodob will say: "the best coding site is codechef" when "coding site" or
+# "best site" are asked
+dobodob: learn "the best coding site" is codechef
 dobodob: recall coding sites
-dobodob: recall key words and other key words
+
+# dobodob will explain its reasoning behind what it said if ~explain
+# is added
+dobodob: recall topic and ~explain
+
+# use recall[index] to get the next topic
 dobodob: recall "a new topic"[1]
+
+# forget a specific definition of a topic
 dobodob: forget "key words"[3]
+
+# move a topic into another topic
 dobodob: merge "a new topic" into "other topic"
 
+# some examples of adding FILLWORDS
 dobodob: what do you recall about leetcode?
 dobodob: please recall "a new topic"[2]
+
+# ADVANCED USAGE OF 'remember'. if you have 'WHAT' in
+# the stopwords before remember, it recalls a fact
+# if not, we learn the fact (as seen below)
+# if there is a "?" at the end, we treat it as a query
+dobodob: please remember "leetcode is terrible"
+dobodob: what do you remember about leetcode?
 
 == interactions ==
 

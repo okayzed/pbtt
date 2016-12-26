@@ -41,6 +41,13 @@ WAIT = random_cycles([
     "alright, ",
 ])
 
+DENY_KNOWLEDGE = random_cycles([
+  "i don't know anything about it",
+  "i'm not sure what you are talking about",
+  "doesn't ring a bell",
+  "i wouldn't tell you if i knew"
+])
+
 ENCOURAGE = random_cycles([
     "should be easy for you :P",
     "i think this one should be interesting",
@@ -58,11 +65,15 @@ HUH = random_cycles([
     "pardon?"
 ])
 
+# probably should make this list dynamic and capable
+# of being added to whenever
 FILLWORDS = [
     "about",
     "alright",
+    "also",
     "anything",
     "anyways",
+    "are",
     "can",
     "do",
     "go",
@@ -70,19 +81,27 @@ FILLWORDS = [
     "haha",
     "heh",
     "hey",
+    "how",
+    "i",
+    "i'm",
     "lol",
     "meh",
+    "morning",
     "no",
     "now",
     "no way",
     "ok",
     "please",
     "sure",
+    "today",
+    "up",
+    "want",
     "what",
+    "whats",
     "will",
     "yeah",
     "yo",
-    "you"
+    "you",
 ]
 
 def affirmative():
@@ -96,6 +115,9 @@ def encouragement():
 
 def huh():
     return next(HUH)
+
+def deny_knowledge():
+    return next(DENY_KNOWLEDGE)
 
 
 ACTUALLY_WAIT=True

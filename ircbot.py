@@ -209,7 +209,7 @@ class IRC_Bot():
             self.handle_part(sendername, channel)
 
     def handle_privmsg_with_cooldown(self, sendername, channel, tokens):
-        self.debug("HANDLING PRIVMSG", sendername, channel, tokens)
+        self.debug("RECEIVING PRIVMSG", sendername, channel, tokens)
         to = tokens[0]
 
         if to.find(self.botnick) != 1:
@@ -217,7 +217,6 @@ class IRC_Bot():
                 tokens.insert(0, ":"+self.botnick)
             else:
                 return
-
 
         if not sendername in self.cooldown:
             self.cooldown[sendername] = [(sendername, channel, tokens)]
@@ -256,19 +255,32 @@ class IRC_Bot():
             addressed_to_bot = True
 
         if addressed_to_bot and nick in auth.ALLOWED:
-            cmd = tokens.pop(0)
+            stopwords = set()
+            cmd = tokens.pop(0).lower()
             cmd = cmd.translate(None, string.punctuation)
             while cmd in mannerisms.FILLWORDS and tokens:
+                stopwords.add(cmd)
                 cmd = tokens.pop(0).lower()
                 cmd = cmd.translate(None, string.punctuation)
 
                 if cmd == "":
                     cmd = "hey"
 
+            cmd_data = {
+                "sender" : sendername,
+                "channel" : channel,
+                "stopwords" : stopwords,
+                "nick" : helpers.nick_for(sendername),
+                "tokens" : tokens
+            }
+
             if cmd in commands.COMMANDS:
-                self.do_command(sendername, channel, cmd, tokens)
+                cmd_data["cmd"] = cmd
+                cmd_data["tokens"] = tokens
+                self.do_command(cmd_data)
             else:
-                self.do_interact(sendername, channel, all_tokens)
+                cmd_data["tokens"] = all_tokens
+                self.do_interact(cmd_data)
 
     def handle_join(self, sendername, channel):
         exclamationIndex = sendername.find("!")
@@ -277,16 +289,12 @@ class IRC_Bot():
     def handle_part(self, sendername, channel):
         pass
 
-    def do_command(self, sendername, channel, cmd, tokens):
+    def do_command(self, cmd_data):
+        cmd = cmd_data["cmd"]
+        tokens = cmd_data["tokens"]
+
         if cmd in commands.COMMANDS:
             self.debug("RECEIVED COMMAND", cmd)
-
-            cmd_data = {
-                "cmd" : cmd,
-                "sender" : sendername,
-                "channel" : channel,
-                "nick" : helpers.nick_for(sendername)
-            }
 
             bot_response = self.make_response(cmd_data)
             commands.COMMANDS[cmd](bot_response, cmd_data, *tokens)
@@ -294,26 +302,22 @@ class IRC_Bot():
     # we need to create a cooldown period for
     # anyone not in our list of authorized users
     # this way we can prevent them from noticing our bottiness
-    def do_interact(self, sendername, channel, tokens):
-        nick = helpers.nick_for(sendername)
-        interactions = []
-
+    def do_interact(self, cmd_data):
         import string
-        tokens = [ t.translate(None, string.punctuation).lower() for t in tokens ]
-        self.debug("INTERACTIONS", tokens)
 
-        cmd_data = {
-            "sender" : sendername,
-            "nick" : helpers.nick_for(sendername),
-            "channel" : channel
-        }
-
-        bot_response = self.make_response(cmd_data)
-
+        nick = cmd_data["nick"]
         if nick not in auth.ALLOWED and "*" not in auth.ALLOWED:
             if random.random() > 0.9:
                 self.say("%s: %s" % (nick, huh()))
             return
+
+        cmd_data["tokens"] = [ t.translate(None, string.punctuation).lower() for t in cmd_data["tokens"] ]
+
+        tokens = cmd_data["tokens"]
+        self.debug("INTERACTIONS", tokens)
+        bot_response = self.make_response(cmd_data)
+
+        interactions = []
 
         for interaction in intrs.INTERACTIONS:
             score = interaction.score(cmd_data, tokens)

@@ -81,6 +81,10 @@ def learn_fact(bot, data, *args):
         import commands, interactions
         tokens = shlex.split(" ".join(args))
 
+        # we are trying to improve how we remember
+        if tokens[0] in ["that"]:
+            tokens.pop(0)
+
         topic = tokens[0]
         fact = tokens[1:]
         cand = find_exact_topic(topic)
@@ -127,6 +131,7 @@ def forget_fact(bot, data, *args):
 
 import string
 def recall_fact(bot, data, *args):
+    wait_small()
     full_args = " ".join(args).lower()
     EXPLAIN = False
     if full_args.find("~explain") >= 0:
@@ -140,7 +145,7 @@ def recall_fact(bot, data, *args):
     cands = find_all_topics(tokens)
 
     if not cands:
-        bot.say("%s: I don't know anything about that" % (data["nick"]))
+        bot.say("%s: %s" % (data["nick"], deny_knowledge()))
         return
 
     index = 1
@@ -191,7 +196,6 @@ def recall_fact(bot, data, *args):
         bot.say("%s. %s" % (sentence_one, sentence_two))
         search_term = full_args
         answer = fact_topic.answers[fact_offset-1]
-        bot.say(data["nick"] + ":", "'%s' [%s/%s]: %s" % (search_term, index, cur_index, " ".join(answer)))
     else:
         search_term = all_topics[0]
         answer = fact_topic.answers[fact_offset-1]
@@ -240,10 +244,41 @@ def merge_fact(bot, data, *args):
     
 
 COMMANDS = {}
-COMMANDS["learn"] = learn_fact
 COMMANDS["know"] = recall_fact
+COMMANDS["tell"] = recall_fact
 COMMANDS["recall"] = recall_fact
 COMMANDS["recommend"] = recall_fact
+
+COMMANDS["learn"] = learn_fact
+
+# remember is a double command.
+# if it is: "what do you remember?"
+# then we have to use recall_fact
+# if it is: "i want you to remember"
+# then we have to use learn_fact
+# to achieve this, we should check if stop
+
+# words contain 'what' and then turn into
+# query vs command mode
+
+def remember_fact(bot, data, *args):
+    stopwords = data['stopwords']
+
+    last_letter = None
+    if len(args) > 0:
+        last_token = args[-1]
+        last_letter = last_token[-1]
+        print "LAST TOKEN", last_token[-1]
+
+    if 'what' in stopwords or last_letter == "?":
+        recall_fact(bot, data, *args)
+    else:
+        learn_fact(bot, data, *args)
+
+
+COMMANDS["remember"] = remember_fact
+
+
 COMMANDS["forget"] = forget_fact
 COMMANDS["merge"] = merge_fact
 
