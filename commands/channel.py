@@ -29,6 +29,15 @@ def join_channel(rsp, data, *args):
                 rsp.bot.send("JOIN", arg)
         rsp.say("%s: %s" % (data["nick"], affirmative()))
 
+def changename(rsp, data, *args):
+    if data["nick"] in auth.OWNERS:
+        print "CHANGING NICK TO", nick
+        nick = args[0]
+
+        rsp.bot.botnick = nick
+        rsp.bot.send("NICK", nick)
+
 COMMANDS = {}
 COMMANDS["join"] = join_channel
 COMMANDS["leave"] = leave_channel
+COMMANDS["changename"] = changename

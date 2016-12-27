@@ -17,32 +17,60 @@ def reload_bot(bot, data, *args):
         reload(ircbot)
         ircbot.load()
 
-        # TODO: actually create a new instance of the bot with a different lock
-        def hand_forward(old_bot):
-            newbot = ircbot.IRC_Bot()
-            print "HANDING BOT FORWARD", old_bot, newbot
-            newbot.server = old_bot.server
-            newbot.port = old_bot.port
-            newbot.channel = old_bot.channel
-            newbot.botnick = old_bot.botnick
-            newbot.password = old_bot.password
-            newbot.irc = old_bot.irc
+    bot.say(affirmative())
 
-            newbot.s_mutex = old_bot.s_mutex
-            newbot.run_forever()
+def transfer_bot(bot, data, *args):
+    # TODO: actually create a new instance of the bot with a different lock
+    def hand_forward(old_bot):
+        newbot = ircbot.IRC_Bot()
+        print "HANDING BOT FORWARD", old_bot, newbot
+        newbot.server = old_bot.server
+        newbot.port = old_bot.port
+        newbot.channel = old_bot.channel
+        newbot.botnick = old_bot.botnick
+        newbot.password = old_bot.password
+        newbot.irc = old_bot.irc
+        old_bot.expired = True
 
-            # we raise this so we can quit when the bot finally does finish
-            raise ircbot.BotTransferException()
+        newbot.run_forever()
+        # we raise this so we can quit when the bot finally does finish
+        raise ircbot.BotTransferException()
 
-        bot.say(affirmative())
+    if data["nick"] in auth.OWNERS:
+        reload_bot(bot, data, *args)
+        hand_forward(bot.bot)
 
-        # TODO: make this safe to hand forward somehow
-#        hand_forward(bot.bot)
 
+def resurrect_bot(bot, data, *args):
+
+    # TODO: actually create a new instance of the bot with a different lock
+    def hand_forward(old_bot):
+        newbot = ircbot.IRC_Bot()
+        print "CREATING NEW BOT", old_bot, newbot
+        newbot.server = old_bot.server
+        newbot.port = old_bot.port
+        newbot.channel = old_bot.channel
+        newbot.botnick = old_bot.botnick
+        newbot.password = old_bot.password
+
+        old_bot.send("QUIT")
+
+        newbot.connect()
+        newbot.run_forever()
+
+        # we raise this so we can quit when the bot finally does finish
+        raise ircbot.BotTransferException()
+
+    if data["nick"] in auth.OWNERS:
+        reload_bot(bot, data, *args)
+        hand_forward(bot.bot)
 
     
 COMMANDS = {}
 COMMANDS["reload"] = reload_bot
 COMMANDS["upd8"] = reload_bot
 COMMANDS["update"] = reload_bot
+
+COMMANDS["resurrect"] = resurrect_bot
+COMMANDS["reincarnate"] = transfer_bot
 

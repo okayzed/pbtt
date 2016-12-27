@@ -71,6 +71,7 @@ class IRC_Bot():
         self.password = password
 
         self.cooldown = {}
+        self.expired = False
 
         self.s_mutex = threading.Lock()
 
@@ -137,6 +138,9 @@ class IRC_Bot():
             # if we previously received a line, we try not to sleep
             # if we timed out, we sleep 0.1 seconds
             time.sleep(next_sleep)
+            if self.expired:
+                print "EXPIRING OLD BOT"
+                break
 
 	    while not input_queue.empty():
                 q = input_queue.get()
