@@ -1,16 +1,19 @@
 import pickle
 import helpers
 
-ALLOWED = {
+ALLOWED_DEFAULT = {
     "oky" : 0xFFFF,
     "guf" : 0xFFFF,
 }
 
 
-OWNERS = {
+OWNERS_DEFAULT = {
     "oky" : 0xFFFF,
     "guf" : 0xFFFF
 }
+
+ALLOWED = {}
+OWNERS = {}
 
 def add_user(username, by):
     if not username in ALLOWED:
@@ -29,6 +32,12 @@ def _reload():
     ALLOWED.clear()
     for a in allowed:
         ALLOWED[a] = allowed[a]
+
+    if not ALLOWED:
+        ALLOWED.update(ALLOWED_DEFAULT)
+    if not OWNERS:
+        OWNERS.update(OWNERS_DEFAULT)
+
 
     print "LOADED USERS", ALLOWED
 

@@ -31,8 +31,8 @@ def join_channel(rsp, data, *args):
 
 def changename(rsp, data, *args):
     if data["nick"] in auth.OWNERS:
-        print "CHANGING NICK TO", nick
         nick = args[0]
+        print "CHANGING NICK TO", nick
 
         rsp.bot.botnick = nick
         rsp.bot.send("NICK", nick)

@@ -29,8 +29,13 @@ reloadables = [mannerisms, helpers, auth, intrs, commands, response]
 CHANNEL_CMDS = {"JOIN": 1, "PART": 1, "PRIVMSG": 1}
 PRINT_LINES = True
 
-botnick = "mybot"
-channel = "##crowtalk"
+# BOT DEFAULTS
+twitch = False
+server="chat.freenode.net"
+port=6697
+channel="##crowtalk"
+botnick="jb"
+password="nopassass"
 
 def load():
     for r in reloadables:
@@ -61,7 +66,8 @@ class IRC_Bot():
                  port=6697,
                  channel="##crowtalk",
                  botnick="jb",
-                 password="nopassass"):
+                 password="nopassass",
+                 twitch=False):
 
         print "Establishing connection to [%s]" % (server)
         self.server = server
@@ -69,6 +75,10 @@ class IRC_Bot():
         self.channel = channel
         self.botnick = botnick
         self.password = password
+
+        self.twitch = twitch
+        if twitch:
+            self.send("CAP REQ :twitch.tv/commands")
 
         self.cooldown = {}
         self.expired = False
@@ -181,16 +191,23 @@ class IRC_Bot():
                 print e
 
     def make_response(self, cmd_data):
-        bot = response.Response()
-        bot.bot = self
-        bot.channel = cmd_data["channel"]
-        bot.from_nick = cmd_data["nick"]
-        if bot.channel == self.botnick:
-            bot.channel = bot.from_nick
+        rsp = response.Response()
+        rsp.bot = self
+        rsp.is_whisper = False
+        rsp.channel = cmd_data["channel"]
+        rsp.from_nick = cmd_data["nick"]
+
+        if rsp.channel == self.botnick:
+            # in twitch mode, we use :/w to whisper instead of privmsg
+            if self.twitch:
+                rsp.is_whisper = True
+            else:
+                rsp.channel = rsp.from_nick
+
 
         self.debug("MAKING RESPONSE FOR", cmd_data)
 
-        return bot
+        return rsp
 
     def handle_numeric_reply(self, sendername, intcommand, tokens):
         if intcommand == 433: # nick in USE?!
@@ -207,6 +224,8 @@ class IRC_Bot():
 
         if command == "PRIVMSG":
             self.handle_privmsg_with_cooldown(sendername, channel, tokens)
+        if command == "WHISPER":
+            self.handle_privmsg_with_cooldown(sendername, self.botnick, tokens)
         elif command == "JOIN":
             self.handle_join(sendername, channel)
         elif command == "PART":

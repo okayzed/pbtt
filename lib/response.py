@@ -1,8 +1,11 @@
 class Response():
     def __init__(self, *args, **kwargs):
-        pass
+        self.is_whisper = False # for twitch whispers
 
     def say(self, *args):
-        self.bot.send("PRIVMSG", self.channel, ":" + " ".join(args))
+        if self.is_whisper:
+            self.bot.send("PRIVMSG", self.channel, ":/w", self.from_nick, " ".join(args))
+        else:
+            self.bot.send("PRIVMSG", self.channel, ":" + " ".join(args))
 
 
