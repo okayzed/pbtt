@@ -79,14 +79,25 @@ def learn_fact(bot, data, *args):
     load_data()
     if data["nick"] in auth.ALLOWED:
         import commands, interactions
-        tokens = shlex.split(" ".join(args))
+        full_args = " ".join(args)
 
-        # we are trying to improve how we remember
-        if tokens[0] in ["that"]:
-            tokens.pop(0)
+        if full_args.find('"') != -1:
+            tokens = shlex.split(full_args)
+            # we are trying to improve how we remember
+            if tokens[0] in ["that"]:
+                tokens.pop(0)
 
-        topic = tokens[0]
-        fact = tokens[1:]
+            topic = tokens[0]
+            fact = tokens[1:]
+
+
+        else:
+            tokens = list(args)
+            if tokens[0] in ["that"]:
+                tokens.pop(0)
+            topic = " ".join(tokens)
+            fact = ""
+
         cand = find_exact_topic(topic)
         if not cand:
             cand = Topic(topic)
@@ -94,11 +105,14 @@ def learn_fact(bot, data, *args):
 
 
         print "LEARNING", cand.topic, tokens[1:]
+
         cand.answers.append(fact)
         bot.say(data["nick"] + ":", affirmative())
         save_data()
 
+
 def forget_fact(bot, data, *args):
+    load_data()
     full_args = " ".join(args)
     match = re.search("\[(\d+)\]", full_args)
 
@@ -119,7 +133,10 @@ def forget_fact(bot, data, *args):
             return
 
     if cand:
-        bot.say("FORGETTING", cand.name, "[%s/%s]:" % (index, len(cand.answers)), " ".join(cand.answers[index-1]))
+        if cand.answers:
+            bot.say("FORGETTING", cand.name, "[%s/%s]:" % (index, len(cand.answers)), " ".join(cand.answers[index-1]))
+        else:
+            bot.say("FORGETTING", cand.name)
 
         if cand.answers:
             cand.answers.pop(index-1)
@@ -175,11 +192,14 @@ def recall_fact(bot, data, *args):
 
     if cur_index < index:
         fact_topic = cand
-        fact_info = fact_topic.answers[-1]
+        fact_info = ""
+        if fact_topic.answers:
+            fact_info = fact_topic.answers[-1]
         fact_offset = 0
 
     all_topics = [c.name for c in cands]
     # if there was more than one topic, we print: "search term", "topic term", search idx, topic idx
+    answer = ""
     if EXPLAIN:
         if fact_offset == 0:
             fact_offset = len(fact_topic.answers)
@@ -195,10 +215,12 @@ def recall_fact(bot, data, *args):
 
         bot.say("%s. %s" % (sentence_one, sentence_two))
         search_term = full_args
-        answer = fact_topic.answers[fact_offset-1]
+        if fact_topic.answers:
+            answer = fact_topic.answers[fact_offset-1]
     else:
         search_term = all_topics[0]
-        answer = fact_topic.answers[fact_offset-1]
+        if fact_topic.answers:
+            answer = fact_topic.answers[fact_offset-1]
         bot.say(data["nick"] + ":", fact_topic.name, " ".join(answer))
 
 

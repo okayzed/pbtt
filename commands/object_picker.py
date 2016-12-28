@@ -4,6 +4,7 @@ import urllib2
 import time
 
 import algos
+import parser
 
 from mannerisms import *
 
@@ -30,8 +31,6 @@ OBJECTS = {
 # can you suggest a problem about math and #combinatorics (easy only) from hackerrank?
 
 def pick_random_object(bot, cmd, *args):
-    print "PICKING RANDOM ALGO"
-
     pick_from = []
     not_from = []
 
@@ -41,68 +40,39 @@ def pick_random_object(bot, cmd, *args):
         if arg == "not" or arg == "but":
             continue
 
-        if not obj:
-            for o in OBJECTS:
-                if o.find(arg.lower()):
-                    obj = o
-                    break
+        for o in OBJECTS:
+            if o.find(arg.lower()) != -1:
+                obj = o
+                break
 
-            if obj:
-                continue
+        if obj:
+            break
 
 
     if not obj in OBJECTS:
-        self.say("What?")
+        bot.say("What?")
         return
 
 
-    sites = OBJECTS[obj]
-    topics = []
-    from_ = True
-    topic = False
-    import string
-    for arg in args:
-        arg = arg.lower()
-        arg = arg.translate(None, string.punctuation.replace("#", ""))
-        if arg == "not" or arg == "but":
-            nono = True
-            continue
+    sites = parser.Section(
+        tokens=["from"], 
+        default="hackerrank",
+        defaults=OBJECTS[obj],
+        prefix="^")
+    topics = parser.Section(
+        tokens=["about", "thats", "that"], 
+        prefix="$")
+    subcat = parser.Section(
+        prefix="#")
 
-        if arg == "about" or arg == "that" or arg == "thats" or arg == "make":
-            topic = True
-            from_ = False
-            continue
-
-        if arg == "from":
-            from_ = True
-            topic = False
-            continue
-
-
-
-        if len(arg) < 3:
-            continue
-
-        if topic or arg[0] == "#":
-            topics.append(arg)
-        elif from_:
-            for k in sites:
-                if k.find(arg) != -1:
-                    if nono:
-                        not_from.append(k)
-                    else:
-                        pick_from.append(k)
-
-    if len(pick_from) == 0:
-        pick_from = set(sites.keys()) - set('leetcode')
-
-    print "AVAILABLE SITES", pick_from
-
-    pick_from = list(set(pick_from) - set(not_from))
-
+    parser.keyword_seperate(args, keywords=[sites, topics, subcat])
+    pick_from = list(set(sites.topics) - set(sites.ignore))
     site = random.choice(pick_from)
 
-    print "PICKING PROBLEM FROM...", site
+    for cat in subcat.topics:
+        topics.topics.append("#" + cat)
+
+    print "PICKING FROM", site
     def next_step():
 
         if len(pick_from) == 1:
@@ -113,7 +83,7 @@ def pick_random_object(bot, cmd, *args):
 
         def pick_obj():
             try:
-                sites[site](bot, topics)
+                OBJECTS[obj][site](bot, topics.topics)
             except Exception, e:
                 print "EXC:", e
                 bot.say("%s: %s" % (cmd["nick"], huh()))

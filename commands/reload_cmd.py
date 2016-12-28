@@ -71,6 +71,5 @@ COMMANDS["reload"] = reload_bot
 COMMANDS["upd8"] = reload_bot
 COMMANDS["update"] = reload_bot
 
-COMMANDS["resurrect"] = resurrect_bot
+COMMANDS["reconnect"] = resurrect_bot
 COMMANDS["reincarnate"] = transfer_bot
-
