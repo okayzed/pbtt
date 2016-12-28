@@ -10,13 +10,18 @@ import string
 
 
 def add_import_paths():
-    import os,sys,inspect
-    currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-    sys.path.insert(0,currentdir)
-    sys.path.insert(0,os.path.join(currentdir, "lib"))
+    import os, sys, inspect
+    currentdir = os.path.dirname(
+        os.path.abspath(inspect.getfile(inspect.currentframe())))
+
+    print "ADDING IMPORT PATH", currentdir, currentdir+"/lib"
+    sys.path.insert(0, currentdir)
+    sys.path.insert(0, os.path.join(currentdir, "lib"))
+
 
 add_import_paths()
 
+import config
 import commands
 import mannerisms
 import helpers
@@ -29,26 +34,15 @@ reloadables = [mannerisms, helpers, auth, intrs, commands, response]
 CHANNEL_CMDS = {"JOIN": 1, "PART": 1, "PRIVMSG": 1}
 PRINT_LINES = True
 
-# BOT DEFAULTS
-twitch = False
-server="chat.freenode.net"
-port=6697
-channel="##crowtalk"
-botnick="jb"
-password="nopassass"
 
 def load():
     for r in reloadables:
         reload(r)
         if hasattr(r, '_reload'):
             r._reload()
-load()
 
-# load local settings
-try:
-    from local import *
-except:
-    pass
+
+load()
 
 SSLError = ssl.SSLError
 try:
@@ -60,24 +54,18 @@ except:
 class BotTransferException(Exception):
     pass
 
+
 class IRC_Bot():
-    def __init__(self,
-                 server="chat.freenode.net",
-                 port=6697,
-                 channel="##crowtalk",
-                 botnick="jb",
-                 password="nopassass",
-                 twitch=False):
+    def __init__(self):
+        print "Establishing connection to [%s]" % (config.server)
+        self.server = config.server
+        self.port = config.port
+        self.channel = config.channel
+        self.botnick = config.botnick
+        self.password = config.password
+        self.twitch = config.twitch
 
-        print "Establishing connection to [%s]" % (server)
-        self.server = server
-        self.port = port
-        self.channel = channel
-        self.botnick = botnick
-        self.password = password
-
-        self.twitch = twitch
-        if twitch:
+        if self.twitch:
             self.send("CAP REQ :twitch.tv/commands")
 
         self.cooldown = {}
@@ -132,18 +120,18 @@ class IRC_Bot():
         irc = self.irc
         overflow = ""
 
-	input_queue = Queue.Queue()
+        input_queue = Queue.Queue()
 
-	def add_input(input_queue):
-	    while True:
-		input_queue.put(sys.stdin.read(1))
+        def add_input(input_queue):
+            while True:
+                input_queue.put(sys.stdin.read(1))
 
-	input_thread = threading.Thread(target=add_input, args=(input_queue,))
-	input_thread.daemon = True
-	input_thread.start()
+        input_thread = threading.Thread(target=add_input, args=(input_queue, ))
+        input_thread.daemon = True
+        input_thread.start()
 
         next_sleep = 0.0
-	waiting_input = []
+        waiting_input = []
         while True:
             # if we previously received a line, we try not to sleep
             # if we timed out, we sleep 0.1 seconds
@@ -152,7 +140,7 @@ class IRC_Bot():
                 print "EXPIRING OLD BOT"
                 break
 
-	    while not input_queue.empty():
+            while not input_queue.empty():
                 q = input_queue.get()
                 if q == '\n':
                     flush = "".join(waiting_input)
@@ -204,18 +192,16 @@ class IRC_Bot():
             else:
                 rsp.channel = rsp.from_nick
 
-
         self.debug("MAKING RESPONSE FOR", cmd_data)
 
         return rsp
 
     def handle_numeric_reply(self, sendername, intcommand, tokens):
-        if intcommand == 433: # nick in USE?!
+        if intcommand == 433:  # nick in USE?!
             self.botnick = self.botnick + "_"
             self.debug("NICK ALREADY IN USE, SWITCHING TO %s" % self.botnick)
             self.send("NICK", self.botnick)
             self.send("JOIN", self.channel)
-
 
     def handle_opcode_reply(self, sendername, command, tokens):
         channel = None
@@ -237,7 +223,7 @@ class IRC_Bot():
 
         if to.find(self.botnick) != 1:
             if channel == self.botnick:
-                tokens.insert(0, ":"+self.botnick)
+                tokens.insert(0, ":" + self.botnick)
             else:
                 return
 
@@ -264,8 +250,6 @@ class IRC_Bot():
 
         self.debug("COOLDOWN", self.cooldown)
 
-
-
     def handle_privmsg(self, sendername, channel, tokens):
         to = tokens.pop(0)
         exclamationIndex = sendername.find("!")
@@ -277,28 +261,46 @@ class IRC_Bot():
         if to.find(self.botnick) == 1:
             addressed_to_bot = True
 
+        needs_explain = False
+        for t in tokens:
+            if t.find("~explain") != -1:
+                needs_explain = True
+
+        # order of our router resolution is:
+        # COMMAND PHRASE: single phrase
+        # COMMAND: STOPWRODS COMMAND ARGS
+        # INTERACTION: PHRASE
         if addressed_to_bot and nick in auth.ALLOWED:
             stopwords = set()
-            cmd = tokens.pop(0).lower()
-            cmd = cmd.translate(None, string.punctuation)
+
+            orig_cmd = tokens.pop(0).lower().strip()
+            if orig_cmd[0] == ":":
+                orig_cmd = orig_cmd[1:]
+
+            cmd = orig_cmd.translate(None, string.punctuation).strip()
             while cmd in mannerisms.FILLWORDS and tokens:
                 stopwords.add(cmd)
-                cmd = tokens.pop(0).lower()
-                cmd = cmd.translate(None, string.punctuation)
+                orig_cmd = tokens.pop(0).lower()
+                cmd = orig_cmd.translate(None, string.punctuation)
 
                 if cmd == "":
                     cmd = "hey"
 
             cmd_data = {
-                "sender" : sendername,
-                "channel" : channel,
-                "stopwords" : stopwords,
-                "nick" : helpers.nick_for(sendername),
-                "tokens" : tokens
+                "sender": sendername,
+                "channel": channel,
+                "stopwords": stopwords,
+                "nick": helpers.nick_for(sendername),
+                "tokens": tokens,
+                "explain": needs_explain
             }
 
-            if cmd in commands.COMMANDS:
-                cmd_data["cmd"] = cmd
+            if cmd in commands.COMMANDS or orig_cmd in commands.COMMANDS:
+                if cmd in commands.COMMANDS:
+                    cmd_data["cmd"] = cmd
+                else:
+                    cmd_data["cmd"] = orig_cmd
+
                 cmd_data["tokens"] = tokens
                 self.do_command(cmd_data)
             else:
@@ -334,7 +336,10 @@ class IRC_Bot():
                 self.say("%s: %s" % (nick, huh()))
             return
 
-        cmd_data["tokens"] = [ t.translate(None, string.punctuation).lower() for t in cmd_data["tokens"] ]
+        cmd_data["tokens"] = [
+            t.translate(None, string.punctuation).lower()
+            for t in cmd_data["tokens"]
+        ]
 
         tokens = cmd_data["tokens"]
         self.debug("INTERACTIONS", tokens)
@@ -348,12 +353,11 @@ class IRC_Bot():
             if score and score > 0:
                 interactions.append((score, interaction))
 
-
         if interactions:
             interactions.sort()
             self.debug("LIKELY INTERACTIONS", interactions)
-            mannerisms.wait_small(lambda: interactions[-1][1].do(bot_response, cmd_data, tokens))
-
+            mannerisms.wait_small(
+                lambda: interactions[-1][1].do(bot_response, cmd_data, tokens))
 
     def run_forever(self):
         self.debug("RUNNING FOREVER")
@@ -389,4 +393,3 @@ class IRC_Bot():
                     print e
                 except KeyboardInterrupt, e:
                     break
-

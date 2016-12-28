@@ -1,0 +1,2 @@
+bs4
+porter2stemmer

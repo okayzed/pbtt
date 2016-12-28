@@ -10,6 +10,17 @@ dobodob: pick a problem from hackerrank thats easy
 dobodob: pick a problem about math #combinatorics (easy or medium) from hackerrank?
 dobodob: suggest a problem from hackerrank about algorithms #graph (easy or medium)
 
+== interactions db ==
+
+# add a new scripted interaction
+addscript regex -> response1 | response2 | response3
+# dobodob will respond with one of the three responses when the below is sent
+dobodob: string_that_matches_regex
+
+# example:
+dobodob: addscript what type of bot are you? -> i'm not the bot, you're the bot | uhhh...
+dobodob: what type of bot are you?
+
 
 == facts db ==
 

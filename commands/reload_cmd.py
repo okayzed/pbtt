@@ -59,6 +59,7 @@ def resurrect_bot(bot, data, *args):
         newbot.run_forever()
 
         # we raise this so we can quit when the bot finally does finish
+        # TODO: determine how much memory leak is happening here
         raise ircbot.BotTransferException()
 
     if data["nick"] in auth.OWNERS:
