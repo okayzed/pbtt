@@ -41,7 +41,7 @@ class Section():
         if type(self.default) == str:
             self.default = [self.default]
 
-def keyword_seperate(tokens, keywords=[], fillwords=None):
+def keyword_seperate(tokens, keywords=[], fillwords=None, unparsed=None):
 
     if type(tokens) == str:
         tokens = tokens.split(" ")
@@ -97,6 +97,9 @@ def keyword_seperate(tokens, keywords=[], fillwords=None):
                 cur_k.ignore.append(arg)
             else:
                 cur_k.topics.append(arg)
+        else:
+            if unparsed:
+                unparsed.topics.append(arg)
 
     for k in keywords:
         if not k.topics:

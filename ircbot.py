@@ -21,28 +21,23 @@ def add_import_paths():
 
 add_import_paths()
 
-import config
-import commands
-import mannerisms
-import helpers
 import auth
+import commands
+import config
+import helpers
 import interactions as intrs
+import mannerisms
 import response
-
-reloadables = [mannerisms, helpers, auth, intrs, commands, response]
+import nl_parser
 
 CHANNEL_CMDS = {"JOIN": 1, "PART": 1, "PRIVMSG": 1}
 PRINT_LINES = True
 
-
-def load():
-    for r in reloadables:
-        reload(r)
-        if hasattr(r, '_reload'):
-            r._reload()
-
-
-load()
+# NOTE:
+# reloadables is responsible for reloading modules when reload command is used.
+# new modules in lib/ need to be added to it to enforce their reloading
+import reloadables
+reloadables.load()
 
 SSLError = ssl.SSLError
 try:
@@ -69,6 +64,7 @@ class IRC_Bot():
             self.send("CAP REQ :twitch.tv/commands")
 
         self.cooldown = {}
+        self.history = {}
         self.expired = False
 
         self.s_mutex = threading.Lock()
@@ -217,14 +213,52 @@ class IRC_Bot():
         elif command == "PART":
             self.handle_part(sendername, channel)
 
+
+    def add_line_to_history(self, sendername, channel, tokens):
+        if not channel in self.history:
+            self.history[channel] = []
+
+        # record history
+        nick = helpers.nick_for(sendername)
+        line = " ".join(tokens)
+        self.history[channel].append((sendername, line))
+
+        MAX_HISTORY=200
+        while len(self.history[channel]) > MAX_HISTORY:
+            self.history[channel].pop(0)
+
+    def handle_unaddressed_line(self, sendername, channel, tokens):
+        nick = helpers.nick_for(sendername)
+        line = " ".join(tokens)
+
+        decls = nl_parser.build_declarations(line)
+        if not decls:
+            return
+
+        for decl in decls:
+            # add a new fact, like: nick, is, sentence
+            sentence = "%s %s" % (nick, decl[1])
+            sentence = " ".join(sentence.split(" "))
+            print "SAVING DECLARATION", sentence
+            commands.facts.load_data()
+            cand = commands.facts.Topic(sentence.lower())
+            DECL="decl"
+            cand.topic.add(DECL)
+            commands.facts.FACTS.append(cand)
+            commands.facts.save_data()
+
+
     def handle_privmsg_with_cooldown(self, sendername, channel, tokens):
         self.debug("RECEIVING PRIVMSG", sendername, channel, tokens)
         to = tokens[0]
+
+        self.add_line_to_history(sendername, channel, tokens)
 
         if to.find(self.botnick) != 1:
             if channel == self.botnick:
                 tokens.insert(0, ":" + self.botnick)
             else:
+                self.handle_unaddressed_line(sendername, channel, tokens)
                 return
 
         if not sendername in self.cooldown:

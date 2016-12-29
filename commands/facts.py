@@ -11,6 +11,7 @@ from mannerisms import *
 import ircbot
 import shlex
 import helpers
+import parser
 
 
 STEMMER=lambda w: w
@@ -57,7 +58,10 @@ def find_exact_topic(topic):
             return q
 
 # find a list of facts and topics they fall under
-def find_all_topics(tokens):
+def find_all_topics(tokens, sort=True):
+    add = []
+    tokens = [ t.translate(None, string.punctuation) for t in tokens ]
+
     topics = set(map(STEMMER, tokens))
     # remove fill words from the tokens, probably
 
@@ -68,7 +72,8 @@ def find_all_topics(tokens):
         if overlap:
             possibles.append((q, overlap))
 
-    possibles.sort(key=lambda w: len(w[1]), reverse=True)
+    if sort:
+        possibles.sort(key=lambda w: len(w[1]), reverse=True)
 
     return [p[0] for p in possibles]
 
@@ -150,13 +155,12 @@ import string
 def recall_fact(bot, data, *args):
     wait_small()
     full_args = " ".join(args).lower()
-    EXPLAIN = False
-    if full_args.find("~explain") >= 0:
-        EXPLAIN = True
-        full_args = full_args.replace("~explain", "").strip()
-
     match = re.search("\[(\d+)\]", full_args)
     full_args = re.sub("\[(\d+)\]", "", full_args).translate(None, string.punctuation)
+
+    if full_args.find("latest") != -1 or full_args.find("news") != -1:
+        recall_latest_fact(bot, data, *args)
+        return
 
     tokens = shlex.split(full_args)
     cands = find_all_topics(tokens)
@@ -200,7 +204,7 @@ def recall_fact(bot, data, *args):
     all_topics = [c.name for c in cands]
     # if there was more than one topic, we print: "search term", "topic term", search idx, topic idx
     answer = ""
-    if EXPLAIN:
+    if data["explain"]:
         if fact_offset == 0:
             fact_offset = len(fact_topic.answers)
 
@@ -228,6 +232,26 @@ def recall_fact(bot, data, *args):
 
     return
 
+def recall_latest_fact(bot, data, *args):
+    wait_small()
+    full_args = " ".join(args).lower()
+
+    tokens = shlex.split(full_args)
+    tokens = filter(lambda w: w not in ["about", "on", "with", "of", "the"], tokens)
+
+    print "TOKENS", tokens
+    cands = find_all_topics(tokens, sort=False)
+
+    if not cands:
+        bot.say("%s: %s" % (data["nick"], deny_knowledge()))
+        return
+
+    fact_topic = cands[-1]
+    answer = ""
+    if fact_topic.answers:
+        answer = fact_topic.answers[-1]
+
+    bot.say(data["nick"] + ":", fact_topic.name, " ".join(answer))
 
 def merge_fact(bot, data, *args):
     full_args = " ".join(args)
@@ -262,16 +286,78 @@ def merge_fact(bot, data, *args):
 
         save_data()
 
+def answer_fact_from(bot, data, *args):
+    import parser
+    person = parser.Section(
+        prefix="@")
 
-    
+    parser.keyword_seperate(args, keywords=[person])
 
-COMMANDS = {}
-COMMANDS["know"] = recall_fact
-COMMANDS["tell"] = recall_fact
-COMMANDS["recall"] = recall_fact
-COMMANDS["recommend"] = recall_fact
+    reversed_history = reversed(bot.bot.history[data["channel"]])
+    args = [a for a in args]
 
-COMMANDS["learn"] = learn_fact
+    for person in person.topics:
+        print "RESPONDING TO", person
+        for hist in reversed_history:
+            sendername = hist[0]
+            line = hist[1]
+
+            nick = helpers.nick_for(sendername)
+
+
+            if line.find("respond") != -1 or line.find("answer") != -1 and nick == data["nick"]:
+                print "SKIPPING LINE ASKING FOR RESPONSE?"
+                continue
+
+            if nick == person:
+                # now we handle and dispatch, then return
+                new_data = dict([(k,data[k]) for k in data ])
+                print "USING LINE:",line
+                new_data["nick"] = nick
+
+                recall_fact(bot, new_data, *line.split(" "))
+
+                break
+
+def tag_fact(bot, data, *args):
+    wait_small()
+    full_args = " ".join(args).lower()
+    print "TAGGING FACT"
+
+    untags = parser.Section(
+        prefix="-",
+        tokens=["without"])
+
+    tags = parser.Section(
+        prefix="+",
+        tokens=["with"])
+
+    query = parser.Section()
+
+    parser.keyword_seperate(full_args, keywords=[tags, untags], unparsed=query)
+
+    topics = find_all_topics(query.topics)
+    if not topics:
+        return
+
+    if tags.topics:
+        print "ADDING TAGS", tags.topics
+
+    if untags.topics:
+        print "REMOVING TAGS", untags.topics
+
+    for topic in topics:
+        print "ADJUSTING TAGS ON TOPIC", topic.name
+        for t in tags.topics:
+            t = STEMMER(t)
+            topic.topic.add(t)
+
+        for u in untags.topics:
+            u = STEMMER(u)
+            topic.topic.remove(u)
+
+    save_data()
+
 
 # remember is a double command.
 # if it is: "what do you remember?"
@@ -298,9 +384,24 @@ def remember_fact(bot, data, *args):
         learn_fact(bot, data, *args)
 
 
+COMMANDS = {}
+COMMANDS["know"] = recall_fact
+COMMANDS["tell"] = recall_fact
+COMMANDS["recall"] = recall_fact
+COMMANDS["recommend"] = recall_fact
+
+COMMANDS["news"] = recall_latest_fact
+COMMANDS["latest"] = recall_latest_fact
+
+COMMANDS["learn"] = learn_fact
+
 COMMANDS["remember"] = remember_fact
 
+COMMANDS["tag"] = tag_fact
 
 COMMANDS["forget"] = forget_fact
 COMMANDS["merge"] = merge_fact
+
+COMMANDS["answer"] = answer_fact_from
+COMMANDS["respond"] = answer_fact_from
 

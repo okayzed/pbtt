@@ -8,6 +8,7 @@ import auth
 
 from mannerisms import *
 import ircbot
+import reloadables
 
 def reload_bot(bot, data, *args):
     if data["nick"] in auth.OWNERS:
@@ -15,58 +16,51 @@ def reload_bot(bot, data, *args):
         print "RELOADING (BC OF %s) " % data["nick"]
 
         reload(ircbot)
-        ircbot.load()
+        reloadables.load()
 
     bot.say(affirmative())
 
-def transfer_bot(bot, data, *args):
-    # TODO: actually create a new instance of the bot with a different lock
-    def hand_forward(old_bot):
-        newbot = ircbot.IRC_Bot()
-        print "HANDING BOT FORWARD", old_bot, newbot
-        newbot.server = old_bot.server
-        newbot.port = old_bot.port
-        newbot.channel = old_bot.channel
-        newbot.botnick = old_bot.botnick
-        newbot.password = old_bot.password
-        newbot.irc = old_bot.irc
-        old_bot.expired = True
+# TODO: actually create a new instance of the bot with a different lock
+def hand_forward(oldbot):
+    newbot = ircbot.IRC_Bot()
+    print "HANDING BOT FORWARD", oldbot, newbot
+    newbot.server = oldbot.server
+    newbot.port = oldbot.port
+    newbot.channel = oldbot.channel
+    newbot.botnick = oldbot.botnick
+    newbot.password = oldbot.password
 
+
+    if hasattr(oldbot, 'history'):
+        newbot.history = oldbot.history
+
+    oldbot.expired = True
+    if hasattr(oldbot, 'irc'):
+        newbot.irc = oldbot.irc
+
+    return newbot
+
+def transfer_bot(bot, data, *args):
+    if data["nick"] in auth.OWNERS:
+        reload_bot(bot, data, *args)
+        newbot = hand_forward(bot.bot)
         newbot.run_forever()
+
         # we raise this so we can quit when the bot finally does finish
         raise ircbot.BotTransferException()
 
+def resurrect_bot(bot, data, *args):
     if data["nick"] in auth.OWNERS:
         reload_bot(bot, data, *args)
-        hand_forward(bot.bot)
+        newbot = hand_forward(bot.bot)
 
-
-def resurrect_bot(bot, data, *args):
-
-    # TODO: actually create a new instance of the bot with a different lock
-    def hand_forward(old_bot):
-        newbot = ircbot.IRC_Bot()
-        print "CREATING NEW BOT", old_bot, newbot
-        newbot.server = old_bot.server
-        newbot.port = old_bot.port
-        newbot.channel = old_bot.channel
-        newbot.botnick = old_bot.botnick
-        newbot.password = old_bot.password
-
-        old_bot.send("QUIT")
-
+        bot.send("QUIT")
         newbot.connect()
         newbot.run_forever()
 
-        # we raise this so we can quit when the bot finally does finish
-        # TODO: determine how much memory leak is happening here
         raise ircbot.BotTransferException()
 
-    if data["nick"] in auth.OWNERS:
-        reload_bot(bot, data, *args)
-        hand_forward(bot.bot)
 
-    
 COMMANDS = {}
 COMMANDS["reload"] = reload_bot
 COMMANDS["upd8"] = reload_bot

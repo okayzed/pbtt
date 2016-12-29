@@ -15,7 +15,12 @@ class DummyBot(IRC_Bot):
                 nick = os.environ['NICK']
             else:
                 nick = OWNERS.keys()[0]
-            yield ":%s!mydummyurl.10 PRIVMSG %s :%s"%(nick, self.botnick, txt)
+
+            if 'TO' in os.environ:
+                botname = os.environ['TO']
+            else:
+                botname = self.botnick
+            yield ":%s!mydummyurl.10 PRIVMSG %s :%s"%(nick, botname, txt)
 
     def send(self, *args):
         print "SENDING", args
