@@ -81,5 +81,5 @@ def has_solved_problem(bot, cmd_data, *args):
     
 
 COMMANDS={
-    "!solved": has_solved_problem
+    "solved": has_solved_problem
 }
