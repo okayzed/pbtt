@@ -139,9 +139,9 @@ def forget_fact(bot, data, *args):
 
     if cand:
         if cand.answers:
-            bot.say("FORGETTING", cand.name, "[%s/%s]:" % (index, len(cand.answers)), " ".join(cand.answers[index-1]))
+            bot.say("forgetting", cand.name, "[%s/%s]:" % (index, len(cand.answers)), " ".join(cand.answers[index-1]))
         else:
-            bot.say("FORGETTING", cand.name)
+            bot.say("forgetting", cand.name)
 
         if cand.answers:
             cand.answers.pop(index-1)
@@ -286,39 +286,6 @@ def merge_fact(bot, data, *args):
 
         save_data()
 
-def answer_fact_from(bot, data, *args):
-    import parser
-    person = parser.Section(
-        prefix="@")
-
-    parser.keyword_seperate(args, keywords=[person])
-
-    reversed_history = reversed(bot.bot.history[data["channel"]])
-    args = [a for a in args]
-
-    for person in person.topics:
-        print "RESPONDING TO", person
-        for hist in reversed_history:
-            sendername = hist[0]
-            line = hist[1]
-
-            nick = helpers.nick_for(sendername)
-
-
-            if line.find("respond") != -1 or line.find("answer") != -1 and nick == data["nick"]:
-                print "SKIPPING LINE ASKING FOR RESPONSE?"
-                continue
-
-            if nick == person:
-                # now we handle and dispatch, then return
-                new_data = dict([(k,data[k]) for k in data ])
-                print "USING LINE:",line
-                new_data["nick"] = nick
-
-                recall_fact(bot, new_data, *line.split(" "))
-
-                break
-
 def tag_fact(bot, data, *args):
     wait_small()
     full_args = " ".join(args).lower()
@@ -369,7 +336,7 @@ def tag_fact(bot, data, *args):
 # words contain 'what' and then turn into
 # query vs command mode
 
-def remember_fact(bot, data, *args):
+def remember_fact(rsp, data, *args):
     stopwords = data['stopwords']
 
     last_letter = None
@@ -379,10 +346,9 @@ def remember_fact(bot, data, *args):
         print "LAST TOKEN", last_token[-1]
 
     if 'what' in stopwords or last_letter == "?":
-        recall_fact(bot, data, *args)
+        recall_fact(rsp, data, *args)
     else:
-        learn_fact(bot, data, *args)
-
+        learn_fact(rsp, data, *args)
 
 COMMANDS = {}
 COMMANDS["know"] = recall_fact
@@ -401,7 +367,4 @@ COMMANDS["tag"] = tag_fact
 
 COMMANDS["forget"] = forget_fact
 COMMANDS["merge"] = merge_fact
-
-COMMANDS["answer"] = answer_fact_from
-COMMANDS["respond"] = answer_fact_from
 

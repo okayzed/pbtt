@@ -77,6 +77,9 @@ def build_declarations(orig_sentence):
         "i had" : "had",
         "i have" : "has",
         "i don't" : "doesn't",
+        "i still have" : "has",
+        "i still have not" : "hasn't",
+        "i still haven't " : "hasn't",
         "i haven't" : "has not",
         "i have not" : "has not",
         "i've" : "has",
@@ -92,6 +95,11 @@ def build_declarations(orig_sentence):
     for sent in parsed:
         # look for each declarative statement in the sentence
         lsent = str(sent).lower().strip()
+
+        # you and yours have to replaced
+        if lsent.find("your") != -1:
+            continue
+
         rp = None
         for d in declarations:
             match = re.match(d, lsent)
@@ -103,7 +111,10 @@ def build_declarations(orig_sentence):
                 # we skip learning if we set None in the decls dictionary
                 break
 
-            rp = re.sub(d, declarations[d], lsent)
+            rp = re.sub(d, declarations[d], str(sent), flags=re.I)
+
+            rp = re.sub("(\W)my(\W)", "\\1their\\2", rp, flags=re.I)
+            rp = re.sub("(\W)myself", "\\1themself", rp, flags=re.I)
             ret.append(("", rp.strip()))
 
             break

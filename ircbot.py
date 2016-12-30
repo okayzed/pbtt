@@ -59,6 +59,7 @@ class IRC_Bot():
         self.botnick = config.botnick
         self.password = config.password
         self.twitch = config.twitch
+        self.members = {}
 
         if self.twitch:
             self.send("CAP REQ :twitch.tv/commands")
@@ -91,7 +92,17 @@ class IRC_Bot():
         self.send("NICK", self.botnick)
         self.send("PRIVMSG nickserv :identify %s %s\r\n" %
                   (self.botnick, self.password))
-        self.send("JOIN", self.channel)
+
+        self.join_channel(self.channel)
+
+
+    def join_channel(self, channel):
+        self.send("JOIN", channel)
+        self.send("WHO", channel)
+
+    def leave_channel(self, channel):
+        if channel in self.members:
+            del self.members[channel]
 
     # *args is default arguments
     # self.send(a, b, c, d='f', e='g')
@@ -193,11 +204,21 @@ class IRC_Bot():
         return rsp
 
     def handle_numeric_reply(self, sendername, intcommand, tokens):
+        if intcommand == 352:  # nick in USE?!
+            to = tokens.pop(0)
+            channel = tokens.pop(0)
+            username = tokens.pop(0)
+            hostname = tokens.pop(0)
+            server = tokens.pop(0)
+            nick = tokens.pop(0)
+
+            self.handle_join(":%s!%s" % (nick, hostname), channel)
+            
         if intcommand == 433:  # nick in USE?!
             self.botnick = self.botnick + "_"
             self.debug("NICK ALREADY IN USE, SWITCHING TO %s" % self.botnick)
             self.send("NICK", self.botnick)
-            self.send("JOIN", self.channel)
+            self.join_channel(self.channel)
 
     def handle_opcode_reply(self, sendername, command, tokens):
         channel = None
@@ -229,6 +250,21 @@ class IRC_Bot():
 
     def handle_unaddressed_line(self, sendername, channel, tokens):
         nick = helpers.nick_for(sendername)
+
+        # if the message was addressed to someone, remove the prefix
+        # so we can try and learn any declarations they made to the
+        # other person. maybe we should keep around the fact about
+        # who they told?
+        if channel in self.members:
+            members = self.members[channel]
+            while tokens:
+                word = tokens[0].translate(None, string.punctuation).strip() 
+                
+                if word in members:
+                    tokens.pop(0)
+                else:
+                    break
+                    
         line = " ".join(tokens)
 
         decls = nl_parser.build_declarations(line)
@@ -241,7 +277,7 @@ class IRC_Bot():
             sentence = " ".join(sentence.split(" "))
             print "SAVING DECLARATION", sentence
             commands.facts.load_data()
-            cand = commands.facts.Topic(sentence.lower())
+            cand = commands.facts.Topic(sentence)
             DECL="decl"
             cand.topic.add(DECL)
             commands.facts.FACTS.append(cand)
@@ -342,11 +378,21 @@ class IRC_Bot():
                 self.do_interact(cmd_data)
 
     def handle_join(self, sendername, channel):
-        exclamationIndex = sendername.find("!")
-        nick = sendername[1:exclamationIndex]
+        nick = helpers.nick_for(sendername)
+
+        if not channel in self.members:
+            self.members[channel] = {}
+
+        self.members[channel][nick] = sendername
 
     def handle_part(self, sendername, channel):
-        pass
+        nick = helpers.nick_for(sendername)
+
+        if not channel in self.members:
+            return
+
+        if nick in self.members[channel]:
+            del self.members[channel][nick]
 
     def do_command(self, cmd_data):
         cmd = cmd_data["cmd"]

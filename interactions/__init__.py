@@ -12,11 +12,17 @@ def _reload():
     while INTERACTIONS:
         INTERACTIONS.pop()
 
+    errs = []
     for m in modules:
-        reload(m)
+        try:
+            reload(m)
+        except Exception, e:
+            errs.append((m, e))
 
     for m in modules:
         for c in m.INTERACTIONS:
             print 'Loading interaction', c
             INTERACTIONS.append(c())
 
+    for m,e in errs:
+        print "ERROR: COULDNT RELOAD MODULE", m, e

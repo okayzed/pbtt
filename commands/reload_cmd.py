@@ -34,6 +34,9 @@ def hand_forward(oldbot):
     if hasattr(oldbot, 'history'):
         newbot.history = oldbot.history
 
+    if hasattr(oldbot, 'members'):
+        newbot.members = oldbot.members
+
     oldbot.expired = True
     if hasattr(oldbot, 'irc'):
         newbot.irc = oldbot.irc
