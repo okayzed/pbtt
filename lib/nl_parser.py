@@ -17,13 +17,14 @@ def split_sentence(sentence):
     delimiters = ".?!;"
 
     indices = []
-    prev = 0
     for d in delimiters:
         s = sentence
         idx = s.find(d)
+        prev = 0
 
         while idx != -1:
-            indices.append(prev + idx)
+            if s[idx+1].strip() == "":
+                indices.append(prev + idx + 1)
             prev += idx
 
             idx += 1
@@ -33,6 +34,9 @@ def split_sentence(sentence):
                 break
 
             idx = s.find(d)
+
+            if idx >= len(s) - 1:
+                break
 
     indices.sort()
 
