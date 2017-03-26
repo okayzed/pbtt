@@ -48,18 +48,31 @@ def stalk_user(rsp, data, *args):
                 sendername = members[nick]
                 print "FOUND", sendername
                 name, hostname = sendername.split("!")[:2]
-                import socket
+                ip = None
                 try:
-                    ip = socket.gethostbyname(hostname)
-                except Exception, e:
-                    print e
-                    rsp.say("%s: %s is too hidden for that" % (data["nick"], nick))
+                    _, ip = hostname.split("@")
+                except: 
+                    ip = hostname
 
-                    return
+                match = None
 
-                print "IP IS", ip
+                try:
+                    match = geolite2.lookup(ip or hostname)
+                except ValueError, e:
+                    pass
 
-                match = geolite2.lookup(ip)
+                if not match:
+                    import socket
+                    try:
+                        ip = socket.gethostbyname(ip)
+                    except Exception, e:
+                        print e
+                        rsp.say("%s: %s is too hidden for that" % (data["nick"], nick))
+
+                        return
+
+                    match = geolite2.lookup(ip)
+
                 print "MATCH IS", match
 
                 if match:

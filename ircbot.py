@@ -101,6 +101,8 @@ class IRC_Bot():
         self.send("WHO", channel)
 
     def leave_channel(self, channel):
+        print "LEAVING CHANNEL", channel
+        self.send("PART", channel)
         if channel in self.members:
             del self.members[channel]
 
@@ -267,14 +269,13 @@ class IRC_Bot():
                     
         line = " ".join(tokens)
 
-        decls = nl_parser.build_declarations(line)
+        decls = nl_parser.build_declarations(line, name=nick)
         if not decls:
             return
 
         for decl in decls:
             # add a new fact, like: nick, is, sentence
-            sentence = "%s %s" % (nick, decl[1])
-            sentence = " ".join(sentence.split(" "))
+            sentence = " ".join(decl.split(" "))
             print "SAVING DECLARATION", sentence
             commands.facts.load_data()
             cand = commands.facts.Topic(sentence)
@@ -411,7 +412,12 @@ class IRC_Bot():
         import string
 
         nick = cmd_data["nick"]
-        if nick not in auth.ALLOWED and "*" not in auth.ALLOWED:
+        auth_nick = nick
+        if "auth_nick" in cmd_data:
+            auth_nick = cmd_data["auth_nick"]
+
+        if auth_nick not in auth.ALLOWED and "*" not in auth.ALLOWED:
+            import random
             if random.random() > 0.9:
                 self.say("%s: %s" % (nick, huh()))
             return

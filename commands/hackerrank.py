@@ -19,7 +19,9 @@ def regex_contains(parent, regex):
 SOLVERS = {
     "cherim" : "cherim",
     "dbqpdb" : "oky",
-    "kadoban" : "kadoban"
+    "chuongv" : "BaneAliens",
+    "kadoban" : "kadoban",
+    "suprdewd" : "suprdewd"
 }
 
 def has_solved_problem(bot, cmd_data, *args):
@@ -31,10 +33,16 @@ def has_solved_problem(bot, cmd_data, *args):
 
     args = [ arg.replace("-", " ").translate(None, string.punctuation).strip() for arg in args ]
 
+    print 
     slug = "-".join(args)
 
     url = "https://www.hackerrank.com/rest/contests/master/challenges/%s" % (slug)
-    print "CHECKING SOLVED PROBLEM", SOLVERS
+
+    members = dict( (x, x) for x in bot.bot.members[cmd_data["channel"]])
+
+    for k in SOLVERS:
+        members[k] = SOLVERS[k]
+
     print "PROBLEM IS", url
     data = urllib2.urlopen("%s/leaderboard?offset=%s&limit=100&include_practice=true&_=%s" % (url, offset, now))
     read = json.loads(data.read())
@@ -44,6 +52,10 @@ def has_solved_problem(bot, cmd_data, *args):
 
     total = read["total"]
     print "TOTAL", total
+    if total > 20000:
+        bot.say("too many people solved this problem, i'm not digging through that");
+        return
+
     while not found_solver and offset < total:
         print "CHECKING %s..." % (offset)
         solvers = read["models"]
@@ -51,8 +63,8 @@ def has_solved_problem(bot, cmd_data, *args):
         
         for solver in solvers:
             name = solver["hacker"].lower()
-            if name in SOLVERS:
-                solver["hacker"] = SOLVERS[name]
+            if name in members:
+                solver["hacker"] = members[name]
                 found_solvers.append(solver)
 
         offset += 100

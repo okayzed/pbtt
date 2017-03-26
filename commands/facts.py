@@ -62,6 +62,12 @@ def find_all_topics(tokens, sort=True):
     add = []
     tokens = [ t.translate(None, string.punctuation) for t in tokens ]
 
+    new_tokens = []
+    for t in tokens:
+        if t not in FILLWORDS:
+            new_tokens.append(t)
+
+    tokens = new_tokens
     topics = set(map(STEMMER, tokens))
     # remove fill words from the tokens, probably
 
@@ -116,6 +122,30 @@ def learn_fact(bot, data, *args):
         save_data()
 
 
+def forget_all_fact(bot, data, *args):
+    if data["nick"] in auth.OWNERS:
+        load_data()
+        args = [a for a in args]
+       
+        if "~f" in args:
+            args.remove("~f")
+
+        cands = find_all_topics(args)
+
+        total = 0 
+        for cand in cands:
+            if cand.answers:
+                total += len(cand.answers)
+            else:
+                total += 1
+        
+        bot.say("forgetting %s tidbits" % total)
+
+        for cand in cands:
+            FACTS.remove(cand)
+
+        save_data()
+
 def forget_fact(bot, data, *args):
     load_data()
     full_args = " ".join(args)
@@ -151,6 +181,15 @@ def forget_fact(bot, data, *args):
 
         save_data()
 
+def replace_self_tokens(bot, data, tokens):
+    for i in xrange(1, len(tokens)):
+        if tokens[i] in ["me", "myself"]:
+            tokens[i] = data["nick"]
+
+    for i in xrange(len(tokens)):
+        if tokens[i] in ["yourself"]:
+            tokens[i] = bot.bot.botnick
+
 import string
 def recall_fact(bot, data, *args):
     wait_small()
@@ -162,7 +201,16 @@ def recall_fact(bot, data, *args):
         recall_latest_fact(bot, data, *args)
         return
 
+    rand_fact = False
+    for w in [ "something else", "random", "another" ]:
+        if full_args.find(w) != -1:
+            rand_fact = True
+
+    print "USING RAND FACT", rand_fact
+
     tokens = shlex.split(full_args)
+
+    replace_self_tokens(bot, data, tokens)
     cands = find_all_topics(tokens)
 
     if not cands:
@@ -180,19 +228,29 @@ def recall_fact(bot, data, *args):
     fact_info = None
     fact_topic = None
 
-    for cand in cands:
-        if cur_index <= index:
-            this_index = 0
-            for ans in cand.answers:
-                cur_index += 1
-                this_index += 1
+    if rand_fact:
+        fact_topic = random.choice(cands)
+        fact_offset = int(random.random() * len(fact_topic.answers))
+        print "TOPIC", fact_topic, "OFFSET", fact_offset
+        fact_info = ""
+        if fact_topic.answers:
+            fact_info = fact_topic.answers[fact_offset]
 
-                if cur_index == index:
-                    fact_topic = cand
-                    fact_info = ans
-                    fact_offset = this_index
-        else:
-            cur_index += len(cand.answers)
+        cur_index = index
+    else:
+        for cand in cands:
+            if cur_index <= index:
+                this_index = 0
+                for ans in cand.answers:
+                    cur_index += 1
+                    this_index += 1
+
+                    if cur_index == index:
+                        fact_topic = cand
+                        fact_info = ans
+                        fact_offset = this_index
+            else:
+                cur_index += len(cand.answers)
 
     if cur_index < index:
         fact_topic = cand
@@ -238,6 +296,7 @@ def recall_latest_fact(bot, data, *args):
 
     tokens = shlex.split(full_args)
     tokens = filter(lambda w: w not in ["about", "on", "with", "of", "the"], tokens)
+    replace_self_tokens(bot, data, tokens)
 
     print "TOKENS", tokens
     cands = find_all_topics(tokens, sort=False)
@@ -366,5 +425,6 @@ COMMANDS["remember"] = remember_fact
 COMMANDS["tag"] = tag_fact
 
 COMMANDS["forget"] = forget_fact
+COMMANDS["!forgetall"] = forget_all_fact
 COMMANDS["merge"] = merge_fact
 

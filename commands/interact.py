@@ -70,6 +70,7 @@ def interact_with(rsp, data, *args):
                 print "USING LINE:",line
                 new_data["nick"] = nick
                 new_data["tokens"] = line.split(" ")
+                new_data["auth_nick"] = data["nick"]
 
                 rsp.bot.do_interact(new_data)
 
@@ -80,7 +81,7 @@ def interact_with(rsp, data, *args):
 # respond should do what? look up facts or try to interact?
 # we can randomly decide for now
 def respond_to(rsp, data, *args):
-    if random.random > 0.5:
+    if random.random() > 0.5:
         answer_fact_from(rsp, data, *args)
     else:
         interact_with(rsp, data, *args)
