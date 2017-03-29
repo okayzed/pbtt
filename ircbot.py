@@ -314,7 +314,8 @@ class IRC_Bot():
                             response_thread = threading.Timer(3, cb)
                             response_thread.start()
 
-            cb()
+            response_thread = threading.Timer(3, cb)
+            response_thread.start()
         else:
             self.cooldown[sendername].append((sendername, channel, tokens))
             self.cooldown[sendername] = self.cooldown[sendername][-3:]
@@ -476,6 +477,6 @@ class IRC_Bot():
                 except BotTransferException, e:
                     break
                 except Exception, e:
-                    print e
+                    print "EXCEPTION!", str(e)
                 except KeyboardInterrupt, e:
                     break

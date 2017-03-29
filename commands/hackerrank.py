@@ -34,12 +34,15 @@ def has_solved_problem(bot, cmd_data, *args):
 
     args = [ arg.replace("-", " ").translate(None, string.punctuation).strip() for arg in args ]
 
-    print 
     slug = "-".join(args)
 
     url = "https://www.hackerrank.com/rest/contests/master/challenges/%s" % (slug)
+    print "URL IS", url
 
-    members = dict( (x, x) for x in bot.bot.members[cmd_data["channel"]])
+    try:
+        members = dict( (x, x) for x in bot.bot.members[cmd_data["channel"]])
+    except:
+        members = {}
 
     for k in SOLVERS:
         members[k] = SOLVERS[k]
