@@ -21,7 +21,8 @@ SOLVERS = {
     "dbqpdb" : "oky",
     "chuongv" : "BaneAliens",
     "kadoban" : "kadoban",
-    "suprdewd" : "suprdewd"
+    "suprdewd" : "suprdewd",
+    "govindg" : "govg",
 }
 
 def has_solved_problem(bot, cmd_data, *args):
