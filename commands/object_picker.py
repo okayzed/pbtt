@@ -16,7 +16,7 @@ ALLOW_HR_CATEGORIES = [
 ]
 
 OBJECTS = {
-    "algorithm" : algos.ALGO_SITES
+    "problem" : algos.ALGO_SITES
 }
 
 
@@ -29,6 +29,8 @@ OBJECTS = {
 # pick a problem about easy #dynamic algorithms from hackerrank
 # pick a problem from hackerrank about algorithms #dynamic (easy or medium, please)
 # can you suggest a problem about math and #combinatorics (easy only) from hackerrank?
+# pick an easy problem from hackerrank
+# pick a hard problem from hackerrank
 
 def pick_random_object(bot, cmd, *args):
     pick_from = []
@@ -36,18 +38,19 @@ def pick_random_object(bot, cmd, *args):
 
     nono = False
     obj = None
+    prev_token = None
     for arg in args:
         if arg == "not" or arg == "but":
             continue
 
         for o in OBJECTS:
-            if o.find(arg.lower()) != -1:
+            if arg.lower().find(o.lower()) != -1:
                 obj = o
                 break
 
         if obj:
             break
-
+        prev_token = arg
 
     if not obj in OBJECTS:
         bot.say("What?")
@@ -64,6 +67,14 @@ def pick_random_object(bot, cmd, *args):
         prefix="$")
     subcat = parser.Section(
         prefix="#")
+
+    # i need to change "easy OBJECT" to "OBJECT thats easy"
+    # so that i can say: "give me an easy problem"
+    # TODO: do this by adding prev_token to topics if it is a topic for obj
+    # right now, we do it always
+
+    if prev_token:
+        topics.topics.append(prev_token)
 
     parser.keyword_seperate(args, keywords=[sites, topics, subcat])
     pick_from = list(set(sites.topics) - set(sites.ignore))

@@ -22,6 +22,7 @@ SOLVERS = {
     "chuongv" : "BaneAliens",
     "kadoban" : "kadoban",
     "suprdewd" : "suprdewd",
+    "mbossert" : "tomboy64",
     "govindg" : "govg",
 }
 
