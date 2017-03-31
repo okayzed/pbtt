@@ -9,6 +9,9 @@ from bs4 import BeautifulSoup
 from mannerisms import *
 import re
 import string
+import auth
+import pickle
+import helpers
 
 def regex_contains(parent, regex):
     parent = parent.lower()
@@ -16,18 +19,40 @@ def regex_contains(parent, regex):
     return m != None
 
 
-SOLVERS = {
-    "cherim" : "cherim",
-    "dbqpdb" : "oky",
-    "chuongv" : "BaneAliens",
-    "kadoban" : "kadoban",
-    "suprdewd" : "suprdewd",
-    "mbossert" : "tomboy64",
-    "govindg" : "govg",
+DEFAULT_SOLVERS = {
+    "dbqpdb" : "oky"
 }
 
-def has_solved_problem(bot, cmd_data, *args):
+SOLVERS = {}
 
+def add_user(username, handle):
+    print "ADDING USER", username, handle
+    if not username in SOLVERS:
+        SOLVERS[username] = handle
+
+    save_users()
+
+def remove_user(username, by):
+    if username in SOLVERS:
+        del SOLVERS[username]
+
+    save_users()
+
+def _reload():
+    solvers = helpers.load_data_for_module(__name__, "solvers", SOLVERS)
+    SOLVERS.clear()
+    for a in solvers:
+        SOLVERS[a] = solvers[a]
+
+    if not SOLVERS:
+        SOLVERS.update(SOLVERS_DEFAULT)
+
+    print "LOADED HR SOLVERS:", SOLVERS
+
+def save_users():
+    helpers.save_data_for_module(__name__, "solvers", SOLVERS)
+
+def has_solved_problem(bot, cmd_data, *args):
     import time, json
     now = str(time.time()*1000)
 
@@ -97,6 +122,46 @@ def has_solved_problem(bot, cmd_data, *args):
 
     
 
+def add_solver(bot, data, *args):
+    if data["nick"] in auth.OWNERS:
+        print "LISTENING TO OWNER!", data["nick"]
+        changed = False
+        for tok in args:
+            if tok.find(":") == -1:
+                continue
+
+            if tok in [ "to", "and", "now" ] or tok in FILLWORDS:
+                continue
+
+            if tok[0] == "!":
+                print "REMOVE USER", tok
+                tok = tok[1:]
+                if tok in [ "everyone" ]:
+                    remove_user("*", data["nick"])
+                else:
+                    remove_user(tok, data["nick"])
+
+                changed = True
+            else:
+                if tok in [ "everyone" ]:
+                    add_user("*", data["nick"])
+                else:
+                    print "ADDING USER", tok
+                    tok = tok.split(":")
+
+                    username = tok[0]
+                    ircnick = tok[1]
+                    add_user(username, ircnick)
+                changed = True
+
+        if changed:
+            bot.say("%s: %s %s" % (data["nick"], affirmative(), affirmative()))
+
+
+_reload()
+
+COMMANDS = {}
 COMMANDS={
     "solved": has_solved_problem
 }
+COMMANDS["!addsolver"] = add_solver
