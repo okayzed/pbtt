@@ -53,6 +53,9 @@ def save_users():
     helpers.save_data_for_module(__name__, "solvers", SOLVERS)
 
 def has_solved_problem(bot, cmd_data, *args):
+    bot.say("Sorry, HR banned me for a bit :-(");
+    return
+
     import time, json
     now = str(time.time()*1000)
 
