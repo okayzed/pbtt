@@ -3,6 +3,7 @@
 import socket
 import ssl
 import sys
+import datetime
 import threading
 import time
 import Queue
@@ -63,6 +64,7 @@ class IRC_Bot():
 
         if self.twitch:
             self.send("CAP REQ :twitch.tv/commands")
+            self.send("CAP REQ :twitch.tv/membership")
 
         self.cooldown = {}
         self.history = {}
@@ -121,7 +123,8 @@ class IRC_Bot():
         self.send("PRIVMSG", self.channel, ":" + " ".join(args))
 
     def debug(self, *args):
-        print " ".join(map(str, args))
+        now = datetime.datetime.now()
+        print str(now), " ".join(map(str, args))
 
     # this is a generator function that uses our irc socket connection to read
     # and stitch together lines from the network

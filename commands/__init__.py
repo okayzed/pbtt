@@ -6,6 +6,7 @@ import listen_to
 import object_picker
 import reload_cmd
 import scripted
+import wolfram
 
 # algos needs to come before object picker, apparently
 modules = [
@@ -19,6 +20,7 @@ modules = [
     scripted,
     # misc
     hackerrank,
+    wolfram,
 ]
 
 
