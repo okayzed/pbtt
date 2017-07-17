@@ -317,7 +317,11 @@ class IRC_Bot():
                             response_thread = threading.Timer(3, cb)
                             response_thread.start()
 
-            response_thread = threading.Timer(3, cb)
+            if mannerisms.ACTUALLY_WAIT:
+                response_thread = threading.Timer(3, cb)
+            else:
+                response_thread = threading.Timer(0.1, cb)
+
             response_thread.start()
         else:
             self.cooldown[sendername].append((sendername, channel, tokens))
