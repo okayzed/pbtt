@@ -16,13 +16,13 @@ def peg(query):
             correctQuery += character
     URL = 'http://wcipeg.com/wiki/' + correctQuery
     firstParagraph = pegFirstParagraph(URL)
-    explanation = ' '.join([text.strip() for text in firstParagraph.itertext()])
+    explanation = ' '.join([text.encode("utf8").strip() for text in firstParagraph.itertext()])
     if "You can search for this page" in explanation:
         a = [link for link in firstParagraph.iter("a")][0]
         newQuery = a.items()[0][1]
         newURL = "http://wcipeg.com" + newQuery
         newFirstParagraph = pegFirstParagraph(newURL)
-        explanation = ' '.join([text.strip() for text in newFirstParagraph.itertext()])
+        explanation = ' '.join([text.encode("utf8").strip() for text in newFirstParagraph.itertext()])
         URL = newURL
     lastIndex = 0
     curIndex = 0

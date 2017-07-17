@@ -4,7 +4,7 @@ from lxml import etree
 #oeis queries
 def oeis(query):
     #correctly format query
-    correctQuery = ""
+    correctQuery = " "
     for char in query:
         try:
             int(char)
@@ -12,6 +12,8 @@ def oeis(query):
         except ValueError:
             if correctQuery[-1] != ',':
                 correctQuery += ','
+    correctQuery = correctQuery.strip(",")
+
     #search results URL
     URL = "https://oeis.org/search?q=" + correctQuery
     #GET request
@@ -19,19 +21,19 @@ def oeis(query):
     root = etree.HTML(result._content)
     #results information
     resultsElement = root.xpath("//table[@bgcolor='#FFFFCC']")[0]
-    resultsInfo = [text.strip() for text in resultsElement.itertext() if text.strip()]
+    resultsInfo = [text.encode("utf8").strip() for text in resultsElement.itertext() if text.strip()]
     message = resultsInfo[0]
     try:
         #find element with relevant info (first result)
         linkElement = root.xpath("//tr[@bgcolor='#EEEEFF']")[0]
-        linkInfo = [text.strip() for text in linkElement.itertext() if text.strip()]
+        linkInfo = [text.encode("utf8").strip() for text in linkElement.itertext() if text.strip()]
         sequenceNumber = linkInfo[0]
         sequenceTitle = linkInfo[1]
         #construct link to first result]
         link = "https://oeis.org/" + sequenceNumber
         #first result sequence
-        sequence = [text.strip() for text in root.xpath("//tt")[0].itertext() if text.strip() != ',' and text.strip() != '']
-        sequence = ', '.join([text.strip(', ') for text in sequence])
+        sequence = [text.encode("utf8").strip() for text in root.xpath("//tt")[0].itertext() if text.strip() != ',' and text.strip() != '']
+        sequence = ', '.join([text.encode("utf8").strip(', ') for text in sequence])
         ##add 7 results to sequence, store in sequencePreview
         additionalChars = len(query.split(',')) + 8
         sequencePreview = ''
