@@ -7,7 +7,21 @@ def pegFirstParagraph(URL):
     firstParagraph = root.xpath("//p")[0]
     return firstParagraph
 
+# if we have a query that contains quotes, we will just use the quoted part in our query.
+# otherwise, we use everything
+import re
+def get_query_term(query):
+    search_term = re.match('".*"', query)
+    if search_term:
+        query = search_term.group(0)
+
+    return query
+
+
+
 def peg(query):
+    query = get_query_term(query)
+
     correctQuery = ''
     for character in query.strip():
         if character == ' ':
@@ -26,7 +40,7 @@ def peg(query):
         URL = newURL
     lastIndex = 0
     curIndex = 0
-    while curIndex < 366 - len(URL) - 15:
+    while curIndex < 366 - len(URL) - 15 and curIndex < len(explanation):
         if explanation[curIndex] == '.':
             lastIndex = curIndex
         curIndex += 1
