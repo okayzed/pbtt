@@ -7,6 +7,8 @@ import object_picker
 import reload_cmd
 import scripted
 import wolfram
+import peg
+import oeis
 
 # algos needs to come before object picker, apparently
 modules = [
@@ -21,6 +23,8 @@ modules = [
     # misc
     hackerrank,
     wolfram,
+    peg,
+    oeis
 ]
 
 
