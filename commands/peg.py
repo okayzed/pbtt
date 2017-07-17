@@ -11,9 +11,9 @@ def pegFirstParagraph(URL):
 # otherwise, we use everything
 import re
 def get_query_term(query):
-    search_term = re.match('".*"', query)
+    search_term = re.search('"(.*)"', query)
     if search_term:
-        query = search_term.group(0)
+        query = search_term.group(1)
 
     return query
 
