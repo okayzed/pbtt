@@ -54,7 +54,7 @@ def oeis(query):
             return "Too many results ({0}). Please refine your search.".format(message.split()[1])
 
 def do_oeis(bot, data, *args):
-    ans = peg(" ".join(args))
+    ans = oeis(" ".join(args))
     bot.say("%s: %s" % (data["nick"], ans))
 
 COMMANDS = {}
