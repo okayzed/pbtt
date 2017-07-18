@@ -19,7 +19,7 @@ class ScriptedInteraction(Interaction):
 
         can_do = []
         for script in scripted_helper.SCRIPTS:
-            match = re.search(script.precedent.strip(), line)
+            match = re.search(script.precedent.strip(), line, re.IGNORECASE)
 
             if match:
                 # we found a match, so let's perform the script
@@ -41,7 +41,7 @@ class ScriptedInteraction(Interaction):
 
         can_do = []
         for script in scripted_helper.SCRIPTS:
-            match = re.search(script.precedent.strip(), line)
+            match = re.search(script.precedent.strip(), line, re.IGNORECASE)
 
             if match:
                 # we found a match, so let's perform the script

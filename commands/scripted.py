@@ -70,7 +70,7 @@ def forget_script(bot, data, *args):
         to_remove.pop(index)
 
         bot.say(data["nick"] + ":", affirmative())
-        scripted_helpers.save_data()
+        scripted_helper.save_data()
     
 
 COMMANDS={}
