@@ -279,7 +279,7 @@ class IRC_Bot():
         if "hackerrank.com" in line:
             if hac.filterActiveContests(line):
                 response = self.make_response({"nick": nick, "channel": channel})
-                response.say(scoldString)
+                response.say(nick + ": " + scoldString)
 
         decls = nl_parser.build_declarations(line, name=nick)
         if not decls:
