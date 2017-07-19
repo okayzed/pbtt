@@ -2,7 +2,9 @@ from lxml import etree
 import requests
 
 
-def filterActiveContests(address):
+def filterActiveContests(address, response, nick):
+    if "hackerrank.com" not in address:
+        return None
     #navigate to hackerrank contests page
     result = requests.get("https://www.hackerrank.com/contests")
     root = etree.HTML(result._content)
@@ -13,7 +15,8 @@ def filterActiveContests(address):
     #extract contest names through "view details" links
     contests = [link.items()[0][1] for link in links]
 
+    scoldString = "Don't link HR problems for ongoing contests. people will need to register for specific contest to view. Explain problem in a few words instead. If you are kadoban, you should now better by now. ~love, cherim"
+
     for contest in contests:
         if contest in address and "challenges" in address:
-            return True
-    return False
+            response.say("%s: %s" % (nick, scoldString))

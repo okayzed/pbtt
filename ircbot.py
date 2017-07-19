@@ -273,13 +273,9 @@ class IRC_Bot():
 
         line = " ".join(tokens)
 
-        #filter out hackerrank stuff
-        scoldString = "Don't link HR problems from ongoing contests, people will need to register for specific contest to view. Explain problem in a few words instead. If you are kadoban, you should know better by now ~love, cherim"
-
-        if "hackerrank.com" in line:
-            if hac.filterActiveContests(line):
-                response = self.make_response({"nick": nick, "channel": channel})
-                response.say(nick + ": " + scoldString)
+        #filter active HR contest links
+        response = self.make_response({"nick": nick, "channel": channel})
+        hac.filterActiveContests(line, response, nick)
 
         decls = nl_parser.build_declarations(line, name=nick)
         if not decls:
