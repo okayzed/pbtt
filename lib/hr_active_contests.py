@@ -2,7 +2,7 @@ from lxml import etree
 import requests
 
 
-def filterActiveContests(address, response, nick):
+def filter_active_contests(response, address, nick):
     if "hackerrank.com" not in address:
         return None
     #navigate to hackerrank contests page

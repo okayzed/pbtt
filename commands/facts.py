@@ -409,6 +409,27 @@ def remember_fact(rsp, data, *args):
     else:
         learn_fact(rsp, data, *args)
 
+
+
+def learn_from_line(response, line, nick):
+    import commands
+    import nl_parser
+    decls = nl_parser.build_declarations(line, name=nick)
+    if not decls:
+        return
+
+    for decl in decls:
+        # add a new fact, like: nick, is, sentence
+        sentence = " ".join(decl.split(" "))
+        print "SAVING DECLARATION", sentence
+        commands.facts.load_data()
+        cand = commands.facts.Topic(sentence)
+        DECL="decl"
+        cand.topic.add(DECL)
+        commands.facts.FACTS.append(cand)
+        commands.facts.save_data()
+
+
 COMMANDS = {}
 COMMANDS["know"] = recall_fact
 COMMANDS["tell"] = recall_fact

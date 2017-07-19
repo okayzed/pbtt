@@ -29,7 +29,6 @@ import helpers
 import interactions as intrs
 import mannerisms
 import response
-import nl_parser
 import hr_active_contests as hac
 
 CHANNEL_CMDS = {"JOIN": 1, "PART": 1, "PRIVMSG": 1}
@@ -255,6 +254,8 @@ class IRC_Bot():
             self.history[channel].pop(0)
 
     def handle_unaddressed_line(self, sendername, channel, tokens):
+        import hr_active_contests as hac
+        from commands import facts
 
         nick = helpers.nick_for(sendername)
 
@@ -274,25 +275,11 @@ class IRC_Bot():
 
         line = " ".join(tokens)
 
-        #filter active HR contest links
+        # filter active HR contest links
         response = self.make_response({"nick": nick, "channel": channel})
-        hac.filterActiveContests(line, response, nick)
 
-        decls = nl_parser.build_declarations(line, name=nick)
-        if not decls:
-            return
-
-        for decl in decls:
-            # add a new fact, like: nick, is, sentence
-            sentence = " ".join(decl.split(" "))
-            print "SAVING DECLARATION", sentence
-            commands.facts.load_data()
-            cand = commands.facts.Topic(sentence)
-            DECL="decl"
-            cand.topic.add(DECL)
-            commands.facts.FACTS.append(cand)
-            commands.facts.save_data()
-
+        hac.filter_active_contests(response, line, nick)
+        facts.learn_from_line(response, line, nick)
 
     def handle_privmsg_with_cooldown(self, sendername, channel, tokens):
         self.debug("RECEIVING PRIVMSG", sendername, channel, tokens)
