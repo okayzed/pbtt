@@ -16,6 +16,7 @@ def reload_bot(bot, data, *args):
         print "RELOADING (BC OF %s) " % data["nick"]
 
         reload(ircbot)
+        reload(reloadables)
         reloadables.load()
 
     bot.say(affirmative())

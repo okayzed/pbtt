@@ -255,6 +255,7 @@ class IRC_Bot():
             self.history[channel].pop(0)
 
     def handle_unaddressed_line(self, sendername, channel, tokens):
+
         nick = helpers.nick_for(sendername)
 
         # if the message was addressed to someone, remove the prefix

@@ -15,7 +15,7 @@ def filterActiveContests(address, response, nick):
     #extract contest names through "view details" links
     contests = [link.items()[0][1] for link in links]
 
-    scoldString = "Don't link HR problems for ongoing contests. people will need to register for specific contest to view. Explain problem in a few words instead. If you are kadoban, you should now better by now. ~love, cherim"
+    scoldString = "Don't link HR problems for ongoing contests. people will need to register for specific contest to view. Explain problem in a few words instead. If you are kadoban, you should know better by no "
 
     for contest in contests:
         if contest in address and "challenges" in address:
