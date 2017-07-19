@@ -30,6 +30,7 @@ import interactions as intrs
 import mannerisms
 import response
 import nl_parser
+import hr_active_contests as hac
 
 CHANNEL_CMDS = {"JOIN": 1, "PART": 1, "PRIVMSG": 1}
 PRINT_LINES = True
@@ -218,7 +219,7 @@ class IRC_Bot():
             nick = tokens.pop(0)
 
             self.handle_join(":%s!%s" % (nick, hostname), channel)
-            
+
         if intcommand == 433:  # nick in USE?!
             self.botnick = self.botnick + "_"
             self.debug("NICK ALREADY IN USE, SWITCHING TO %s" % self.botnick)
@@ -263,14 +264,22 @@ class IRC_Bot():
         if channel in self.members:
             members = self.members[channel]
             while tokens:
-                word = tokens[0].translate(None, string.punctuation).strip() 
-                
+                word = tokens[0].translate(None, string.punctuation).strip()
+
                 if word in members:
                     tokens.pop(0)
                 else:
                     break
-                    
+
         line = " ".join(tokens)
+
+        #filter out hackerrank stuff
+        scoldString = "Don't link HR problems from ongoing contests, people will need to register for specific contest to view. Explain problem in a few words instead. If you are kadoban, you should know better by now ~love, cherim"
+
+        if "hackerrank.com" in line:
+            if hac.filterActiveContests(line):
+                response = self.make_response({"nick": nick, "channel": channel})
+                response.say(scoldString)
 
         decls = nl_parser.build_declarations(line, name=nick)
         if not decls:

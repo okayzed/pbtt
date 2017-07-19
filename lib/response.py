@@ -1,5 +1,7 @@
 import time
 import helpers
+import requests
+from lxml import etree
 
 SEEN = {}
 def load_data():
@@ -70,3 +72,5 @@ class Response():
 
             self.bot.send("PRIVMSG", self.channel, ":" + full_sentence)
             mark_seen(self.channel, seen_sentence)
+
+

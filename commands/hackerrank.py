@@ -45,7 +45,7 @@ def _reload():
         SOLVERS[a] = solvers[a]
 
     if not SOLVERS:
-        SOLVERS.update(SOLVERS_DEFAULT)
+        SOLVERS.update(DEFAULT_SOLVERS)
 
     print "LOADED HR SOLVERS:", SOLVERS
 
