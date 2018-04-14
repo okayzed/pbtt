@@ -8,6 +8,8 @@ password="nopassass"
 WOLFRAM_APPID="DEMO"
 
 # load local settings
+import local
+reload(local)
 try:
     from local import *
 except:

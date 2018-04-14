@@ -1,7 +1,11 @@
 import requests
 from lxml import etree
 
+import config
+reload(config)
 from config import WOLFRAM_APPID
+from local import WOLFRAM_APPID
+
 
 #Wolfram Alpha queries:
 def wa(query):
@@ -12,6 +16,7 @@ def wa(query):
     # GET request for xml -- plaintext format
     URL = 'http://api.wolframalpha.com/v2/query?input=' + query + '&appid=' + WOLFRAM_APPID + '&format=image,plaintext'
     correctURL = ''
+    print "GETTING URL", URL
     for char in URL:
         if char == '+':
             correctURL += '%2B'

@@ -205,6 +205,7 @@ def recall_fact(bot, data, *args):
     for w in [ "something else", "random", "another" ]:
         if full_args.find(w) != -1:
             rand_fact = True
+            full_args = full_args.replace(w, " ")
 
     print "USING RAND FACT", rand_fact
 
@@ -283,6 +284,8 @@ def recall_fact(bot, data, *args):
         search_term = all_topics[0]
         if fact_topic.answers:
             answer = fact_topic.answers[fact_offset-1]
+
+        answer = re.sub(",\s*", ", ", answer)
         bot.say(data["nick"] + ":", fact_topic.name, " ".join(answer))
 
 

@@ -3,7 +3,7 @@ import requests
 
 
 def filter_active_contests(response, address, nick):
-    if "hackerrank.com" not in address:
+    if "hackerrank.com" not in address or "euler" in address:
         return None
     #navigate to hackerrank contests page
     result = requests.get("https://www.hackerrank.com/contests")
