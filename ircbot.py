@@ -29,7 +29,7 @@ import helpers
 import interactions as intrs
 import mannerisms
 import response
-import hr_active_contests as hac
+import fetch_url_title
 
 CHANNEL_CMDS = {"JOIN": 1, "PART": 1, "PRIVMSG": 1}
 PRINT_LINES = True
@@ -254,7 +254,6 @@ class IRC_Bot():
             self.history[channel].pop(0)
 
     def handle_unaddressed_line(self, sendername, channel, tokens):
-        import hr_active_contests as hac
         from commands import facts
 
         nick = helpers.nick_for(sendername)
@@ -278,7 +277,7 @@ class IRC_Bot():
         # filter active HR contest links
         response = self.make_response({"nick": nick, "channel": channel})
 
-        hac.filter_active_contests(response, line, nick)
+        fetch_url_title.print_url_title(response, line, nick)
         facts.learn_from_line(response, line, nick)
 
     def handle_privmsg_with_cooldown(self, sendername, channel, tokens):
