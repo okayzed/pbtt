@@ -1,19 +1,14 @@
 import channel
 import facts
-import hackerrank
 import interact
 import listen_to
-import object_picker
 import reload_cmd
 import scripted
 import wolfram
-import peg
 import oeis
 
 # algos needs to come before object picker, apparently
 modules = [
-    algos,
-    object_picker,
     interact,
     listen_to,
     reload_cmd,
@@ -21,9 +16,7 @@ modules = [
     facts,
     scripted,
     # misc
-    hackerrank,
     wolfram,
-    peg,
     oeis
 ]
 

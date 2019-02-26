@@ -3,7 +3,6 @@ import random
 import urllib2
 import time
 
-import algos
 import auth
 
 from mannerisms import *

@@ -4,7 +4,6 @@ import urllib2
 import time
 import re
 
-import algos
 import auth
 
 from mannerisms import *
