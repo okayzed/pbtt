@@ -48,5 +48,6 @@ def print_url_title(response, line, nick):
     else:
         soup = BeautifulSoup(body, "lxml")
         if soup.title:
-            title = soup.title.string.encode("utf-8")
-            response.say("> %s" % title)
+            title = soup.title.string.encode("utf-8").strip()
+            if title:
+                response.say("> %s" % title)
