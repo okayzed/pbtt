@@ -7,6 +7,8 @@ botnick="jb"
 password="nopassass"
 WOLFRAM_APPID="DEMO"
 
+AUTO_LEARN_FACTS = False
+
 # load local settings
 import local
 reload(local)

@@ -125,19 +125,19 @@ def forget_all_fact(bot, data, *args):
     if data["nick"] in auth.OWNERS:
         load_data()
         args = [a for a in args]
-       
+
         if "~f" in args:
             args.remove("~f")
 
         cands = find_all_topics(args)
 
-        total = 0 
+        total = 0
         for cand in cands:
             if cand.answers:
                 total += len(cand.answers)
             else:
                 total += 1
-        
+
         bot.say("forgetting %s tidbits" % total)
 
         for cand in cands:
@@ -414,6 +414,9 @@ def remember_fact(rsp, data, *args):
 
 
 def learn_from_line(response, line, nick):
+    if not config.AUTO_LEARN_FACTS:
+        return
+
     import commands
     import nl_parser
     decls = nl_parser.build_declarations(line, name=nick)
