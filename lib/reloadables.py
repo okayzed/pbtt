@@ -7,9 +7,10 @@ import response
 import parser
 import hr_active_contests as hac
 import nl_parser
+import fetch_url_title
 
 
-reloadables = [mannerisms, helpers, auth, intrs, commands, response, parser, nl_parser, hac]
+reloadables = [mannerisms, helpers, auth, intrs, commands, response, parser, nl_parser, hac, fetch_url_title]
 
 def load():
     for r in reloadables:

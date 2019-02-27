@@ -15,4 +15,5 @@ def print_url_title(response, line, nick):
     print "RETRIEVING URL", url
     soup = BeautifulSoup(u._content, "lxml")
     if soup.title:
-        response.say("> %s" % soup.title.string)
+        title = soup.title.string.encode("utf-8")
+        response.say("> %s" % title)
