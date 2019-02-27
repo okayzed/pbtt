@@ -6,6 +6,7 @@ import sys
 from auth import ALLOWED, OWNERS
 import mannerisms
 
+TO_BOT=False
 class DummyBot(IRC_Bot):
     def readlines(self):
         while True:
@@ -20,7 +21,11 @@ class DummyBot(IRC_Bot):
                 botname = os.environ['TO']
             else:
                 botname = self.botnick
-            yield ":%s!mydummyurl.10 PRIVMSG %s :%s"%(nick, botname, txt)
+
+            if TO_BOT:
+                yield ":%s!mydummyurl.10 PRIVMSG %s :%s"%(nick, botname, txt)
+            else:
+                yield ":%s!mydummyurl.10 PRIVMSG somechan :%s"%(nick, txt)
 
     def send(self, *args):
         print "SENDING", args
