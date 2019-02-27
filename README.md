@@ -1,6 +1,6 @@
 == about ==
 
-dobodob is a simple irc bot that executes commands and interactions.
+pbtt is a simple irc bot that executes commands and interactions.
 
 == running ==
 
@@ -30,9 +30,9 @@ AUTHORIZED ONLY
 
 == interactions ==
 
-interactions are triggers for dobodob to interact back with. these are more
+interactions are triggers for pbtt to interact back with. these are more
 light hearted and do not have actual functional usage. examples would be poking
-dobodob or saying hi.
+pbtt or saying hi.
 
 === list of interactions ===
 
