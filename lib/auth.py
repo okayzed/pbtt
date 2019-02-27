@@ -3,13 +3,13 @@ import helpers
 
 ALLOWED_DEFAULT = {
     "oky" : 0xFFFF,
-    "guf" : 0xFFFF,
+    "fendur" : 0xFFFF,
 }
 
 
 OWNERS_DEFAULT = {
     "oky" : 0xFFFF,
-    "guf" : 0xFFFF
+    "fendur" : 0xFFFF
 }
 
 ALLOWED = {}
