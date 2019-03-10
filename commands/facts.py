@@ -12,6 +12,8 @@ import shlex
 import helpers
 import parser
 
+import config
+
 
 STEMMER=lambda w: w
 

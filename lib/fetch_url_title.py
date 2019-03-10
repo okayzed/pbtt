@@ -6,24 +6,24 @@ import StringIO
 import pdf_title_extract
 SUPPORTS_PDF = pdf_title_extract.SUPPORTS_PDF
 
-def grab_url(line):
-    m = re.search("(?P<url>https?://[^\s]+)", line)
-    if m:
-        return m.group("url")
+USER_AGENT = 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:65.0) Tibbi'
 
-def print_url_title(response, line, nick):
-    url = grab_url(line)
-    if not url:
-        return
+def grab_urls(line):
+    m = re.findall("(?P<url>https?://[^\s]+)", line)
+    return m
 
+def print_url(response, url):
     print "RETRIEVING URL", url
 
     chunk_size = 8096
     body = []
     bytes = 0
     is_pdf = False
-    max_bytes=1024*1024
-    with requests.get(url, verify=False, stream=True) as r:
+    max_bytes=4*1024*1024
+    headers = {
+        'User-Agent': USER_AGENT,
+    }
+    with requests.get(url, verify=False, stream=True, headers=headers) as r:
         content_type = r.headers.get('content-type')
         if r.status_code != 200:
             return
@@ -51,3 +51,9 @@ def print_url_title(response, line, nick):
             title = soup.title.string.encode("utf-8").strip()
             if title:
                 response.say("> %s" % title)
+
+def print_url_title(response, line, nick):
+    urls = grab_urls(line)
+    for url in urls:
+        print_url(response, url)
+
