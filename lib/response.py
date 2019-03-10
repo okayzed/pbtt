@@ -50,6 +50,10 @@ class Response():
     def __init__(self, *args, **kwargs):
         self.is_whisper = False # for twitch whispers
 
+    def whisper(self, nick, *args):
+        full_sentence = " ".join(args)
+        self.bot.send("PRIVMSG", nick, ":" + full_sentence)
+
     def say(self, *args):
         full_sentence = " ".join(args)
         tokens = full_sentence.split(" ")

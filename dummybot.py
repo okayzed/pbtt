@@ -6,7 +6,7 @@ import sys
 from auth import ALLOWED, OWNERS
 import mannerisms
 
-TO_BOT=False
+TO_BOT="PRIV" in os.environ
 class DummyBot(IRC_Bot):
     def readlines(self):
         while True:

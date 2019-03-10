@@ -30,6 +30,7 @@ import interactions as intrs
 import mannerisms
 import response
 import fetch_url_title
+import answering_machine
 
 CHANNEL_CMDS = {"JOIN": 1, "PART": 1, "PRIVMSG": 1}
 PRINT_LINES = True
@@ -279,12 +280,18 @@ class IRC_Bot():
 
         fetch_url_title.print_url_title(response, line, nick)
         facts.learn_from_line(response, line, nick)
+        answering_machine.check(response, channel, line, nick)
 
     def handle_privmsg_with_cooldown(self, sendername, channel, tokens):
         self.debug("RECEIVING PRIVMSG", sendername, channel, tokens)
         to = tokens[0]
 
         self.add_line_to_history(sendername, channel, tokens)
+
+        response = self.make_response({"nick": sendername, "channel": channel})
+        if answering_machine.check(response, channel, " ".join(tokens), helpers.nick_for(sendername)):
+            return
+
 
         if to.find(self.botnick) != 1:
             if channel == self.botnick:
