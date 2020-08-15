@@ -52,7 +52,11 @@ class Response():
 
     def whisper(self, nick, *args):
         full_sentence = " ".join(args)
+        if have_seen(nick, full_sentence):
+            return
+
         self.bot.send("PRIVMSG", nick, ":" + full_sentence)
+        mark_seen(nick, full_sentence)
 
     def say(self, *args):
         full_sentence = " ".join(args)

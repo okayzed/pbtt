@@ -26,7 +26,7 @@ def make_timedelta(timestamp):
     delta %= seconds_in_week
     if w > 0:
         ts.append("%iw" % w)
-        
+
     d = delta // seconds_in_day
     delta %= seconds_in_day
 
@@ -61,14 +61,14 @@ def check(response, channel, line, nick):
 
         MESSAGES[to].append((channel, "%s says %s" % (nick, msg), time.time()))
         save_data()
-        response.whisper(nick, "i'll let them know")
+        response.whisper(nick, "i'll tell %s you said '%s'" % (to, msg))
         return True
     elif nick in MESSAGES:
         now = time.time()
         msgs = MESSAGES[nick]
         for channel, msg, timestamp in msgs:
             wh = "%s (%s ago in #%s)" % (msg, make_timedelta(timestamp), channel)
-            mannerisms.wait_small(lambda: response.whisper(nick, wh))
+            response.whisper(nick, wh)
 
         del MESSAGES[nick]
         save_data()
